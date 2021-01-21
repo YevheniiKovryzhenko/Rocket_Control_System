@@ -1,11 +1,89 @@
+/**
+ * @file servos.c
+ */
 
-#include <stdio.h>
-#include <getopt.h>
-#include <stdlib.h> // for atoi
-#include <signal.h>
-#include <rc/time.h>
-#include <rc/adc.h>
-#include <rc/servo.h>
+#include <servos.h>
+
+
+int servos_init(void)
+{
+
+    // initialize PRU
+    if (rc_servo_init()) return -1;
+
+
+    sstate.initialized = 1;
+    return 0;
+}
+
+/*
+* This function should be used anytime 
+* the servos need to be returned to 
+* their nominal (safe) positions
+*/
+static int __send_motor_nom_pulse(void)
+{
+    for (int i = 0; i < RC_SERVO_CH_MAX; i++) {
+        sstate.ch[i] = 0; //have to set to calibrated nominal values
+    }
+
+    return 0;
+}
+
+int servos_arm(void)
+{
+    if (sstate.arm_state == ARMED) {
+        printf("WARNING: trying to arm when servos are already armed\n");
+        return -1;
+    }
+    if (sstate.initialized != 1)
+    {
+        printf("Servos have not been initialized \n");
+        return -1;
+    }
+    // need to set each of the servos to their nominal positions:
+    __send_motor_nom_pulse();
+
+
+    //enable power:
+    rc_servo_power_rail_en(1);
+
+    sstate.arm_state = ARMED; //set servos to armed and powered
+    return 0;
+}
+
+int servos_disarm(void)
+{
+    // need to set each of the servos to their nominal positions:
+    //__send_motor_nom_pulse(); //won't work, need extra time before power is killed
+
+    //power-off servo rail:
+    rc_servo_power_rail_en(0);
+    return 0;
+}
+
+int servos_march(int i, double* mot)
+{
+    //check if armed
+    if (sstate.arm_state != ARMED)
+    {
+        printf("Servos have not been armed \n");
+        return -1;
+    }
+
+    // need to do mapping between [0 1] and servo signal in us
+
+
+    //send servo signals using [-1.5 1.5] normalized values
+    if (rc_servo_send_pulse_normalized(i, mot[i]) == -1) return -1;
+
+    //send servo signals using Pulse Width in microseconds
+    //if (rc_servo_send_pulse_us(i, m[i]) == -1) return -1;
+
+    return 0;
+}
+
+/*
 static int running;
 typedef enum test_mode_t{
         DISABLED,
@@ -36,6 +114,7 @@ static void __signal_handler(__attribute__ ((unused)) int dummy)
         running=0;
         return;
 }
+
 int main(int argc, char *argv[])
 {
         double servo_pos=0;
@@ -188,8 +267,13 @@ int main(int argc, char *argv[])
                 rc_usleep(1000000/frequency_hz);
         }
         rc_usleep(50000);
-        // turn off power rail and cleanup
-        rc_servo_power_rail_en(0);
-        rc_servo_cleanup();
-        return 0;
+}
+*/
+
+int servos_cleanup(void)
+{
+    // turn off power rail and cleanup
+    rc_servo_power_rail_en(0);
+    rc_servo_cleanup();
+    return 0;
 }
