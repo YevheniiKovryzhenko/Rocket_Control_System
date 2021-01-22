@@ -48,14 +48,6 @@ typedef struct settings_t{
 	int enable_encoders;
 	///@}
 
-	/** @name flight modes */
-	///@{
-	int num_dsm_modes;
-	flight_mode_t flight_mode_1;
-	flight_mode_t flight_mode_2;
-	flight_mode_t flight_mode_3;
-	///@}
-
 	/** @name printf settings */
 	///@{
 	int printf_arm;

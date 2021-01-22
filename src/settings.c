@@ -503,7 +503,7 @@ int settings_load_from_file(char* path)
 	#ifdef DEBUG
 	fprintf(stderr,"v_nominal: %f\n",settings.v_nominal);
 	#endif
-	PARSE_DOUBLE_MIN_MAX(target_altitude_m, 0, 100000.0);
+	PARSE_DOUBLE_MIN_MAX(target_altitude_m, 0.0, 100000.0);
 	#ifdef DEBUG
 		fprintf(stderr, "target_altitude_m: %f\n", settings.target_altitude_m);
 	#endif
