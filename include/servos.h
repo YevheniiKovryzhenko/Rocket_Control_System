@@ -10,10 +10,6 @@
  * 
  *
  */
-
-#ifndef SERVOS_H
-#define SERVOS_H
-
 #include <stdint.h> // for uint64_t
 #include <getopt.h>
 #include <stdlib.h> // for atoi
@@ -24,6 +20,11 @@
 #include <rc/servo.h>
 #include <rcs_defs.h>
 
+
+
+#ifndef SERVOS_H
+#define SERVOS_H
+
  /**
   * This is the state of the servo motors. Contains most recent values
   * reported by the servo motor function and should be only written to 
@@ -32,17 +33,12 @@
 typedef struct servos_state_t {
 	arm_state_t arm_state;			///< ARMED/DISARMED
 	int initialized;				///< set to 1 after servos_init(void)
-	int ch[RC_SERVO_CH_MAX];		///< servo rail channels 1-8 (uses 1 to enable each servo signal)
 	double m[RC_SERVO_CH_MAX];		///< servo motor signals for each pin in [0 1] range
 	double m_us[RC_SERVO_CH_MAX];	///< servo motor signals for each pin in pulse width
 	double servos_lim[RC_SERVO_CH_MAX][3];	///< servo minimum (first col.), nominal (second col.) and maximum values (last col.) 
 }servos_state_t;
 
 extern servos_state_t sstate;
-
-typedef enum servo_map_t {
-	DEF_ms
-} servo_map_t;
 
  /**
   * @brief      Initial setup of all servo motors. Should only be called

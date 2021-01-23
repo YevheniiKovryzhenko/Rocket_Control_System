@@ -20,6 +20,7 @@
 #include <rc/cpu.h>
 
 #include <settings.h> // contains extern settings variable
+#include <servos.h>
 #include <thrust_map.h>
 #include <mix.h>
 #include <input_manager.h>
@@ -27,7 +28,6 @@
 #include <state_estimator.h>
 #include <log_manager.h>
 #include <printf_manager.h>
-#include <servos.h>
 #include <xbee_packet_t.h>
 #include <rc/encoder.h>
 #include <signal.h>
@@ -195,9 +195,6 @@ int main(int argc, char *argv[])
 	if(settings.enable_magnetometer && !rc_mpu_is_gyro_calibrated()){
 		FAIL("ERROR, must calibrate magnetometer with rc_calibrate_mag first\n")
 	}
-	if(!__rc_dsm_is_calibrated()){
-		FAIL("ERROR, must calibrate DSM with rc_calibrate_dsm first\n")
-	}
 
 	// turn cpu freq to max for most consistent performance and lowest
 	// latency servicing the IMU's interrupt service routine
@@ -285,6 +282,12 @@ int main(int argc, char *argv[])
 			FAIL("ERROR: failed to init xbee serial link")
 		}
 	}
+	// set up sevos
+	printf("initializing servos\n");
+	if (servos_init() < 0) {
+		FAIL("ERROR: failed to init servos")
+	}
+
 	// set up feedback controller
 	printf("initializing feedback controller\n");
 	if(feedback_init()<0){
@@ -319,6 +322,7 @@ int main(int argc, char *argv[])
 
 	// make sure everything is disarmed them start the ISR
 	feedback_disarm();
+	servos_disarm();
 	printf("waiting for dmp to settle...\n");
 	fflush(stdout);
 	rc_usleep(3000000);

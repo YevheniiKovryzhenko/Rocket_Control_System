@@ -5,14 +5,11 @@
  * 
  * TODO: allow use of external state estimation parameters
  */
-
 #ifndef INPUT_MANAGER_H
 #define INPUT_MANAGER_H
-
 #include <flight_mode.h>
 #include <feedback.h> // only for arm_state_t
 #include <stdbool.h>
-
 
 /**
  * Represents current command by the user. This is populated by the
@@ -20,7 +17,7 @@
  * what it is receiving.
  */
 typedef struct user_input_t{
-	int initialized;				///< set to 1 after input_manager_init(void)
+	int initialized; 				///< set to 1 after input_manager_init(void)
 	flight_mode_t flight_mode;		///< this is the user commanded flight_mode.
 	int input_active;				///< nonzero indicates some user control is coming in
 	arm_state_t requested_arm_mode;	///< set to ARMED after arming sequence is entered.

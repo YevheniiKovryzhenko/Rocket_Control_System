@@ -12,14 +12,14 @@
 #include <rc/start_stop.h>
 #include <rc/math/quaternion.h>
 
+#include <input_manager.h>
+#include <servos.h>
 #include <setpoint_manager.h>
 #include <settings.h>
-#include <input_manager.h>
 #include <feedback.h>
 #include <state_estimator.h>
 #include <rcs_defs.h>
 #include <flight_mode.h>
-#include <servos.h>
 
 #define XYZ_MAX_ERROR	10.0 ///< meters.
 
