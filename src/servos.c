@@ -4,6 +4,8 @@
 
 #include <servos.h>
 
+servos_state_t sstate;
+
 /*
 This defines operating range of each servo mottor.
 First column should the minimum position of each servo 

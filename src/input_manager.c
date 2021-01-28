@@ -5,6 +5,8 @@
 #include <input_manager.h>
 #include <stdio.h>
 
+user_input_t user_input; // extern variable in input_manager.h
+
 int input_manager_init()
 {
 	user_input.requested_arm_mode = DISARMED;
@@ -14,7 +16,7 @@ int input_manager_init()
 	//need to check serial connection and incoming data from other systems
 
 
-	user_input.initialized = 1; 
+	user_input.initialized = 1;
 	return 0;
 }
 
