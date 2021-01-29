@@ -16,7 +16,16 @@
 #include <input_manager.h>
 #include <rcs_defs.h>
 
-
+ /**
+  * @brief enum for possible vertial axis defined here
+  *
+  * possible orientations for vertial axis, used in state_estimator.c
+  
+typedef enum vertical_axis_t {
+	ORIENTATION_X_UP,
+	ORIENTATION_Z_DOWN,
+} vertical_axis_t;
+ */
 
 /**
  * Configuration settings read from the json settings file and passed to most
@@ -38,6 +47,7 @@ typedef struct settings_t{
 	rotor_layout_t layout;
 	int dof;
 	thrust_map_t thrust_map;
+	rc_mpu_orientation_t orientation;
 	double v_nominal;
 	double target_altitude_m;
 	int enable_magnetometer; // we suggest leaving as 0 (mag OFF)

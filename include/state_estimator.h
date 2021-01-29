@@ -50,6 +50,7 @@ typedef struct state_estimate_t{
 	double quat_imu[4];	///< DMP normalized quaternion
 	double tb_imu[3];	///< tait bryan roll pitch yaw angle (rad)
 	double imu_continuous_yaw; ///< continuous yaw from imu only (multiple turns)
+	double imu_continuous_roll; ///< continuous yaw from imu only (multiple turns)
 	///@}
 
 	/** @name IMU (magnetometer)
@@ -73,7 +74,8 @@ typedef struct state_estimate_t{
 	double roll;
 	double pitch;
 	double yaw;
-	double continuous_yaw;	///<  keeps increasing/decreasing aboce +-2pi
+	double continuous_yaw;	///<  keeps increasing/decreasing above +-2pi
+	double continuous_roll;	///<  keeps increasing/decreasing above +-2pi
 	double X;
 	double Y;
 	double Z;

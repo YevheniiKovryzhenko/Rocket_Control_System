@@ -210,6 +210,32 @@ static int __parse_thrust_map(void)
 	return 0;
 }
 
+static int __parse_orientation(void)
+{
+	struct json_object* tmp = NULL;
+	char* tmp_str = NULL;
+	if (json_object_object_get_ex(jobj, "orientation", &tmp) == 0) {
+		fprintf(stderr, "ERROR: can't find orientation in settings file\n");
+		return -1;
+	}
+	if (json_object_is_type(tmp, json_type_string) == 0) {
+		fprintf(stderr, "ERROR: orientation should be a string\n");
+		return -1;
+	}
+	tmp_str = (char*)json_object_get_string(tmp);
+	if (strcmp(tmp_str, "ORIENTATION_X_UP") == 0) {
+		settings.orientation = ORIENTATION_X_UP;
+	}
+	else if (strcmp(tmp_str, "ORIENTATION_Z_DOWN") == 0) {
+		settings.orientation = ORIENTATION_Z_DOWN;
+	}
+	else {
+		fprintf(stderr, "ERROR: invalid orientation string\n");
+		return -1;
+	}
+	return 0;
+}
+
 
 /**
  * @brief      parses a json_object and fills in the flight mode.
@@ -498,6 +524,10 @@ int settings_load_from_file(char* path)
 	if(__parse_thrust_map()==-1) return -1;
 	#ifdef DEBUG
 	fprintf(stderr,"thrust_map: %d\n",settings.thrust_map);
+	#endif
+	if (__parse_orientation() == -1) return-1;
+	#ifdef DEBUG
+	fprintf(stderr, "orientation: %d\n", settings.orientation);
 	#endif
 	PARSE_DOUBLE_MIN_MAX(v_nominal,7.0,18.0)
 	#ifdef DEBUG

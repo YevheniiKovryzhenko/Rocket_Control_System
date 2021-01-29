@@ -111,13 +111,6 @@ int servos_disarm(void)
 
 int servos_march(int i, double* mot)
 {
-    //check if armed
-    if (sstate.arm_state != ARMED)
-    {
-        printf("Servos have not been armed \n");
-        return -1;
-    }
-
     // need to do mapping between [0 1] and servo signal in us
     sstate.m_us[i] = __map_servo_signal_ms(mot, &servos_lim[i][3]);
 
