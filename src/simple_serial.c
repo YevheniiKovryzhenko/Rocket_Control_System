@@ -1,4 +1,4 @@
-#include <serial.h>
+#include <xbee_serial.h>
 #include <unistd.h>  // read / write
 #include <simple_serial.h>
 #include <rc/start_stop.h>
@@ -32,13 +32,14 @@ int serial_start() {
   return 0;
 }
 
-void serial_read() {
+void serial_read(void* ptr) {
   unsigned char z = 'D';
   while (1) {
     if (read(fd, &z, 1) > 0) {
       printf("%c", z);
     }
   }
+  return;
 }
 
 
