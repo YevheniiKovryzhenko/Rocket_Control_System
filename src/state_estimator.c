@@ -76,97 +76,244 @@ static void __batt_cleanup(void)
 
 static void __imu_march(void)
 {
-	static double last_yaw = 0.0;
-	static int num_yaw_spins = 0;
+	static double last_roll		= 0.0;
+	static int num_roll_spins	= 0;
+	static double last_yaw		= 0.0;
+	static int num_yaw_spins	= 0;
 	double diff;
-
-	// gyro and accel require converting to NED coordinates
-	state_estimate.gyro[0] =  mpu_data.gyro[1];
-	state_estimate.gyro[1] =  mpu_data.gyro[0];
-	state_estimate.gyro[2] = -mpu_data.gyro[2];
-	state_estimate.accel[0] =  mpu_data.accel[1];
-	state_estimate.accel[1] =  mpu_data.accel[0];
-	state_estimate.accel[2] = -mpu_data.accel[2];
-
-	// quaternion also needs coordinate transform
-	state_estimate.quat_imu[0] =  mpu_data.dmp_quat[0]; // W
-	state_estimate.quat_imu[1] =  mpu_data.dmp_quat[2]; // X (i)
-	state_estimate.quat_imu[2] =  mpu_data.dmp_quat[1]; // Y (j)
-	state_estimate.quat_imu[3] = -mpu_data.dmp_quat[3]; // Z (k)
 	if (settings.enable_xbee) {
 		state_estimate.quat_mocap[0] = xbeeMsg.qw; // W
 		state_estimate.quat_mocap[1] = xbeeMsg.qx; // X (i)
 		state_estimate.quat_mocap[2] = xbeeMsg.qy; // Y (j)
 		state_estimate.quat_mocap[3] = xbeeMsg.qz; // Z (k)
-		
+
 		// normalize quaternion because we don't trust the mocap system
 		rc_quaternion_norm_array(state_estimate.quat_mocap);
 		// calculate tait bryan angles too
 		rc_quaternion_to_tb_array(state_estimate.quat_mocap, state_estimate.tb_mocap);
 		// position
-		state_estimate.pos_mocap[0]=(double)xbeeMsg.x;
-		state_estimate.pos_mocap[1]=(double)xbeeMsg.y;
-		state_estimate.pos_mocap[2]=(double)xbeeMsg.z;
-	}//*/
+		state_estimate.pos_mocap[0] = (double)xbeeMsg.x;
+		state_estimate.pos_mocap[1] = (double)xbeeMsg.y;
+		state_estimate.pos_mocap[2] = (double)xbeeMsg.z;
+	}
 
-	// normalize it just in case
-	rc_quaternion_norm_array(state_estimate.quat_imu);
-	// generate tait bryan angles
-	rc_quaternion_to_tb_array(state_estimate.quat_imu, state_estimate.tb_imu);
+	switch (settings.orientation)
+	{
+	case ORIENTATION_X_UP:
+		// gyro and accel require converting to body frame
+		state_estimate.gyro[0] = mpu_data.gyro[2];
+		state_estimate.gyro[1] = mpu_data.gyro[1];
+		state_estimate.gyro[2] = -mpu_data.gyro[0];
+		state_estimate.accel[0] = mpu_data.accel[2];
+		state_estimate.accel[1] = mpu_data.accel[1];
+		state_estimate.accel[2] = -mpu_data.accel[0];
 
-	// yaw is more annoying since we have to detect spins
-	// also make sign negative since NED coordinates has Z point down
-	diff = state_estimate.tb_imu[2] + (num_yaw_spins * TWO_PI) - last_yaw;
-	//detect the crossover point at +-PI and update num yaw spins
-	if(diff < -M_PI) num_yaw_spins++;
-	else if(diff > M_PI) num_yaw_spins--;
+		// quaternion also needs coordinate transform
+		state_estimate.quat_imu[0] = mpu_data.dmp_quat[0]; // W
+		state_estimate.quat_imu[1] = mpu_data.dmp_quat[3]; // X (i)
+		state_estimate.quat_imu[2] = mpu_data.dmp_quat[2]; // Y (j)
+		state_estimate.quat_imu[3] = -mpu_data.dmp_quat[1]; // Z (k)
 
-	// finally the new value can be written
-	state_estimate.imu_continuous_yaw = state_estimate.tb_imu[2] + (num_yaw_spins * TWO_PI);
-	last_yaw = state_estimate.imu_continuous_yaw;
-	return;
+		// normalize it just in case
+		rc_quaternion_norm_array(state_estimate.quat_imu);
+		// generate tait bryan angles
+		rc_quaternion_to_tb_array(state_estimate.quat_imu, state_estimate.tb_imu);
+
+		// roll is more annoying since we have to detect spins
+		// also make sign negative since NED coordinates has Z point down
+		diff = state_estimate.tb_imu[2] + (num_roll_spins * TWO_PI) - last_roll;
+		//detect the crossover point at +-PI and update num yaw spins
+		if (diff < -M_PI) num_roll_spins++;
+		else if (diff > M_PI) num_roll_spins--;
+
+		// finally the new value can be written
+		state_estimate.imu_continuous_roll = state_estimate.tb_imu[0] + (num_roll_spins * TWO_PI);
+		last_roll = state_estimate.imu_continuous_roll;
+		return;
+	case ORIENTATION_Z_DOWN:
+		// gyro and accel require converting to NED coordinates
+		state_estimate.gyro[0] = mpu_data.gyro[1];
+		state_estimate.gyro[1] = mpu_data.gyro[0];
+		state_estimate.gyro[2] = -mpu_data.gyro[2];
+		state_estimate.accel[0] = mpu_data.accel[1];
+		state_estimate.accel[1] = mpu_data.accel[0];
+		state_estimate.accel[2] = -mpu_data.accel[2];
+
+		// quaternion also needs coordinate transform
+		state_estimate.quat_imu[0] = mpu_data.dmp_quat[0]; // W
+		state_estimate.quat_imu[1] = mpu_data.dmp_quat[2]; // X (i)
+		state_estimate.quat_imu[2] = mpu_data.dmp_quat[1]; // Y (j)
+		state_estimate.quat_imu[3] = -mpu_data.dmp_quat[3]; // Z (k)
+
+		// normalize it just in case
+		rc_quaternion_norm_array(state_estimate.quat_imu);
+		// generate tait bryan angles
+		rc_quaternion_to_tb_array(state_estimate.quat_imu, state_estimate.tb_imu);
+
+		// yaw is more annoying since we have to detect spins
+		// also make sign negative since NED coordinates has Z point down
+		diff = state_estimate.tb_imu[2] + (num_yaw_spins * TWO_PI) - last_yaw;
+		//detect the crossover point at +-PI and update num yaw spins
+		if (diff < -M_PI) num_yaw_spins++;
+		else if (diff > M_PI) num_yaw_spins--;
+
+		// finally the new value can be written
+		state_estimate.imu_continuous_yaw = state_estimate.tb_imu[2] + (num_yaw_spins * TWO_PI);
+		last_yaw = state_estimate.imu_continuous_yaw;
+		return;
+	default:
+		fprintf(stderr, "ERROR: Unknown Body Frame Orientation. Assuming ORIENTATION_X_UP. Please check settings.orientation\n");
+
+		// gyro and accel require converting to body frame
+		state_estimate.gyro[0] = mpu_data.gyro[2];
+		state_estimate.gyro[1] = mpu_data.gyro[1];
+		state_estimate.gyro[2] = -mpu_data.gyro[0];
+		state_estimate.accel[0] = mpu_data.accel[2];
+		state_estimate.accel[1] = mpu_data.accel[1];
+		state_estimate.accel[2] = -mpu_data.accel[0];
+
+		// quaternion also needs coordinate transform
+		state_estimate.quat_imu[0] = mpu_data.dmp_quat[0]; // W
+		state_estimate.quat_imu[1] = mpu_data.dmp_quat[3]; // X (i)
+		state_estimate.quat_imu[2] = mpu_data.dmp_quat[2]; // Y (j)
+		state_estimate.quat_imu[3] = -mpu_data.dmp_quat[1]; // Z (k)
+
+		// normalize it just in case
+		rc_quaternion_norm_array(state_estimate.quat_imu);
+		// generate tait bryan angles
+		rc_quaternion_to_tb_array(state_estimate.quat_imu, state_estimate.tb_imu);
+
+		// roll is more annoying since we have to detect spins
+		// also make sign negative since NED coordinates has Z point down
+		diff = state_estimate.tb_imu[2] + (num_roll_spins * TWO_PI) - last_roll;
+		//detect the crossover point at +-PI and update num yaw spins
+		if (diff < -M_PI) num_roll_spins++;
+		else if (diff > M_PI) num_roll_spins--;
+
+		// finally the new value can be written
+		state_estimate.imu_continuous_roll = state_estimate.tb_imu[0] + (num_roll_spins * TWO_PI);
+		last_roll = state_estimate.imu_continuous_roll;
+		return;
+	}
 }
 
 
 static void __mag_march(void)
 {
-	static double last_yaw = 0.0;
-	static int num_yaw_spins = 0;
+	static double last_roll		= 0.0;
+	static int num_roll_spins	= 0;
+	static double last_yaw		= 0.0;
+	static int num_yaw_spins	= 0;
+	double diff = 0;
+	switch (settings.orientation)
+	{
+	case ORIENTATION_X_UP:
+		// don't do anything if mag isn't enabled
+		if (!settings.enable_magnetometer) return;
 
-	// don't do anything if mag isn't enabled
-	if(!settings.enable_magnetometer) return;
+		// mag require converting to body coordinates
+		state_estimate.mag[0] = mpu_data.mag[2];
+		state_estimate.mag[1] = mpu_data.mag[1];
+		state_estimate.mag[2] = -mpu_data.mag[0];
 
-	// mag require converting to NED coordinates
-	state_estimate.mag[0] =  mpu_data.mag[1];
-	state_estimate.mag[1] =  mpu_data.mag[0];
-	state_estimate.mag[2] = -mpu_data.mag[2];
+		// quaternion also needs coordinate transform
+		state_estimate.quat_mag[0] = mpu_data.fused_quat[0]; // W
+		state_estimate.quat_mag[1] = mpu_data.fused_quat[3]; // X (i)
+		state_estimate.quat_mag[2] = mpu_data.fused_quat[2]; // Y (j)
+		state_estimate.quat_mag[3] = -mpu_data.fused_quat[1]; // Z (k)
 
-	// quaternion also needs coordinate transform
-	state_estimate.quat_mag[0] =  mpu_data.fused_quat[0]; // W
-	state_estimate.quat_mag[1] =  mpu_data.fused_quat[2]; // X (i)
-	state_estimate.quat_mag[2] =  mpu_data.fused_quat[1]; // Y (j)
-	state_estimate.quat_mag[3] = -mpu_data.fused_quat[3]; // Z (k)
+
+		// normalize it just in case
+		rc_quaternion_norm_array(state_estimate.quat_mag);
+		// generate tait bryan angles
+		rc_quaternion_to_tb_array(state_estimate.quat_mag, state_estimate.tb_mag);
+
+		// heading
+		state_estimate.mag_heading_raw = mpu_data.compass_heading_raw;
+		state_estimate.mag_heading = state_estimate.tb_mag[0];
+
+		// roll is more annoying since we have to detect spins
+		diff = state_estimate.tb_mag[0] + (num_roll_spins * TWO_PI) + last_roll;
+		//detect the crossover point at +-PI and update num roll spins
+		if (diff < -M_PI) num_roll_spins++;
+		else if (diff > M_PI) num_roll_spins--;
+
+		// finally the new value can be written
+		state_estimate.mag_heading_continuous = state_estimate.tb_mag[0] + (num_roll_spins * TWO_PI);
+		break;
+	case ORIENTATION_Z_DOWN:
+		// don't do anything if mag isn't enabled
+		if (!settings.enable_magnetometer) return;
+
+		// mag require converting to NED coordinates
+		state_estimate.mag[0] = mpu_data.mag[1];
+		state_estimate.mag[1] = mpu_data.mag[0];
+		state_estimate.mag[2] = -mpu_data.mag[2];
+
+		// quaternion also needs coordinate transform
+		state_estimate.quat_mag[0] = mpu_data.fused_quat[0]; // W
+		state_estimate.quat_mag[1] = mpu_data.fused_quat[2]; // X (i)
+		state_estimate.quat_mag[2] = mpu_data.fused_quat[1]; // Y (j)
+		state_estimate.quat_mag[3] = -mpu_data.fused_quat[3]; // Z (k)
+
+
+		// normalize it just in case
+		rc_quaternion_norm_array(state_estimate.quat_mag);
+		// generate tait bryan angles
+		rc_quaternion_to_tb_array(state_estimate.quat_mag, state_estimate.tb_mag);
+
+		// heading
+		state_estimate.mag_heading_raw = mpu_data.compass_heading_raw;
+		state_estimate.mag_heading = state_estimate.tb_mag[2];
+
+		// yaw is more annoying since we have to detect spins
+		// also make sign negative since NED coordinates has Z point down
+		diff = state_estimate.tb_mag[2] + (num_yaw_spins * TWO_PI) - last_yaw;
+		//detect the crossover point at +-PI and update num yaw spins
+		if (diff < -M_PI) num_yaw_spins++;
+		else if (diff > M_PI) num_yaw_spins--;
+
+		// finally the new value can be written
+		state_estimate.mag_heading_continuous = state_estimate.tb_mag[2] + (num_yaw_spins * TWO_PI);
+		break;
+	default:
+		fprintf(stderr, "ERROR: Unknown Body Frame Orientation. Assuming ORIENTATION_X_UP. Please check settings.orientation\n");
+
+		// don't do anything if mag isn't enabled
+		if (!settings.enable_magnetometer) return;
+
+		// mag require converting to body coordinates
+		state_estimate.mag[0] = mpu_data.mag[2];
+		state_estimate.mag[1] = mpu_data.mag[1];
+		state_estimate.mag[2] = -mpu_data.mag[0];
+
+		// quaternion also needs coordinate transform
+		state_estimate.quat_mag[0] = mpu_data.fused_quat[0]; // W
+		state_estimate.quat_mag[1] = mpu_data.fused_quat[3]; // X (i)
+		state_estimate.quat_mag[2] = mpu_data.fused_quat[2]; // Y (j)
+		state_estimate.quat_mag[3] = -mpu_data.fused_quat[1]; // Z (k)
+
+
+		// normalize it just in case
+		rc_quaternion_norm_array(state_estimate.quat_mag);
+		// generate tait bryan angles
+		rc_quaternion_to_tb_array(state_estimate.quat_mag, state_estimate.tb_mag);
+
+		// heading
+		state_estimate.mag_heading_raw = mpu_data.compass_heading_raw;
+		state_estimate.mag_heading = state_estimate.tb_mag[0];
+
+		// roll is more annoying since we have to detect spins
+		diff = state_estimate.tb_mag[0] + (num_roll_spins * TWO_PI) + last_roll;
+		//detect the crossover point at +-PI and update num roll spins
+		if (diff < -M_PI) num_roll_spins++;
+		else if (diff > M_PI) num_roll_spins--;
+
+		// finally the new value can be written
+		state_estimate.mag_heading_continuous = state_estimate.tb_mag[0] + (num_roll_spins * TWO_PI);
+	}
 	
-	
-	// normalize it just in case
-	rc_quaternion_norm_array(state_estimate.quat_mag);
-	// generate tait bryan angles
-	rc_quaternion_to_tb_array(state_estimate.quat_mag, state_estimate.tb_mag);
-
-	// heading
-	state_estimate.mag_heading_raw = mpu_data.compass_heading_raw;
-	state_estimate.mag_heading = state_estimate.tb_mag[2];
-
-	// yaw is more annoying since we have to detect spins
-	// also make sign negative since NED coordinates has Z point down
-	double diff = state_estimate.tb_mag[2] + (num_yaw_spins * TWO_PI) - last_yaw;
-	//detect the crossover point at +-PI and update num yaw spins
-	if(diff < -M_PI) num_yaw_spins++;
-	else if(diff > M_PI) num_yaw_spins--;
-
-	// finally the new value can be written
-	state_estimate.mag_heading_continuous = state_estimate.tb_mag[2] + (num_yaw_spins * TWO_PI);
-	last_yaw = state_estimate.mag_heading_continuous;
+	last_roll = state_estimate.mag_heading_continuous;
 	return;
 }
 
@@ -272,23 +419,65 @@ static void __altitude_march(void)
 	// rotate accel vector
 	rc_quaternion_rotate_vector_array(accel_vec, state_estimate.quat_imu);
 
-	// do first-run filter setup
-	if(alt_kf.step==0){
-		rc_vector_zeros(&u, 1);
-		rc_vector_zeros(&y, 1);
-		alt_kf.x_est.d[0] = -bmp_data.alt_m;
-		rc_filter_prefill_inputs(&acc_lp, accel_vec[2]+GRAVITY);
-		rc_filter_prefill_outputs(&acc_lp, accel_vec[2]+GRAVITY);
+	switch (settings.orientation) {
+	case ORIENTATION_X_UP:
+		// do first-run filter setup
+		if (alt_kf.step == 0) {
+			rc_vector_zeros(&u, 1);
+			rc_vector_zeros(&y, 1);
+			alt_kf.x_est.d[0] = bmp_data.alt_m;
+			rc_filter_prefill_inputs(&acc_lp, accel_vec[0] - GRAVITY);
+			rc_filter_prefill_outputs(&acc_lp, accel_vec[0] - GRAVITY);
+		}
+
+		// calculate acceleration and smooth it just a tad
+		// put result in u for kalman and flip sign since with altitude, positive
+		// is up whereas acceleration in Z points down.
+		rc_filter_march(&acc_lp, accel_vec[0] - GRAVITY);
+		u.d[0] = acc_lp.newest_output;
+
+		// don't bother filtering Barometer, kalman will deal with that
+		y.d[0] = bmp_data.alt_m;
+		break;
+	case (ORIENTATION_Z_DOWN):
+		// do first-run filter setup
+		if (alt_kf.step == 0) {
+			rc_vector_zeros(&u, 1);
+			rc_vector_zeros(&y, 1);
+			alt_kf.x_est.d[0] = -bmp_data.alt_m;
+			rc_filter_prefill_inputs(&acc_lp, accel_vec[2] + GRAVITY);
+			rc_filter_prefill_outputs(&acc_lp, accel_vec[2] + GRAVITY);
+		}
+
+		// calculate acceleration and smooth it just a tad
+		// put result in u for kalman and flip sign since with altitude, positive
+		// is up whereas acceleration in Z points down.
+		rc_filter_march(&acc_lp, accel_vec[2] + GRAVITY);
+		u.d[0] = acc_lp.newest_output;
+
+		// don't bother filtering Barometer, kalman will deal with that
+		y.d[0] = -bmp_data.alt_m;
+		break;
+	default:
+		fprintf(stderr, "ERROR: Unknown Body Frame Orientation. Assuming ORIENTATION_X_UP. Please check settings.orientation\n");
+		// do first-run filter setup
+		if (alt_kf.step == 0) {
+			rc_vector_zeros(&u, 1);
+			rc_vector_zeros(&y, 1);
+			alt_kf.x_est.d[0] = bmp_data.alt_m;
+			rc_filter_prefill_inputs(&acc_lp, accel_vec[0] - GRAVITY);
+			rc_filter_prefill_outputs(&acc_lp, accel_vec[0] - GRAVITY);
+		}
+
+		// calculate acceleration and smooth it just a tad
+		// put result in u for kalman and flip sign since with altitude, positive
+		// is up whereas acceleration in Z points down.
+		rc_filter_march(&acc_lp, accel_vec[0] - GRAVITY);
+		u.d[0] = acc_lp.newest_output;
+
+		// don't bother filtering Barometer, kalman will deal with that
+		y.d[0] = bmp_data.alt_m;
 	}
-
-	// calculate acceleration and smooth it just a tad
-	// put result in u for kalman and flip sign since with altitude, positive
-	// is up whereas acceleration in Z points down.
-	rc_filter_march(&acc_lp, accel_vec[2]+GRAVITY);
-	u.d[0] = acc_lp.newest_output;
-
-	// don't bother filtering Barometer, kalman will deal with that
-	y.d[0] = -bmp_data.alt_m;
 
 	rc_kalman_update_lin(&alt_kf, u, y);
 
@@ -302,11 +491,13 @@ static void __altitude_march(void)
 
 static void __feedback_select(void)
 {
-	state_estimate.roll = state_estimate.tb_imu[0];
-	state_estimate.pitch = state_estimate.tb_imu[1];
-	state_estimate.yaw = state_estimate.tb_imu[2];
-	state_estimate.continuous_yaw = state_estimate.imu_continuous_yaw;
+	state_estimate.roll				= state_estimate.tb_imu[0];
+	state_estimate.pitch			= state_estimate.tb_imu[1];
+	state_estimate.yaw				= state_estimate.tb_imu[2];
+	state_estimate.continuous_yaw	= state_estimate.imu_continuous_yaw;
+	state_estimate.continuous_roll	= state_estimate.imu_continuous_roll;
 
+	// If estimating state of the board and using xbee:
 	if (settings.enable_xbee) {
 		state_estimate.Z = xbeeMsg.z;
 		state_estimate.X = xbeeMsg.x;
