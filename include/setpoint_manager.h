@@ -31,6 +31,7 @@ typedef struct setpoint_t{
 	///< @{
 	int initialized;	///< set to 1 once setpoint manager has initialized
 	///< @}
+	uint64_t init_time;	///< time of activation 
 
 	/** @name attitude setpoint */
 	///< @{

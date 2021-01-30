@@ -51,7 +51,7 @@ typedef enum arm_state_t {
 
 // controller absolute limits
 #define MAX_ROLL_COMPONENT	0.4
-#define MAX_PITCH_COMPONENT	0.4
+#define MAX_PITCH_COMPONENT	2.0
 #define MAX_YAW_COMPONENT	0.4
 
 #define MAX_X_COMPONENT		1.0
