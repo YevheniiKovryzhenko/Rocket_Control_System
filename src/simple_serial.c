@@ -33,7 +33,7 @@ int serial_start() {
 }
 
 static void* serial_read(void* ptr) {
-  int received_argument = *(int*)arg;
+  int received_argument = *(int*)ptr;
   unsigned char z = 'D';
   while (1) {
     if (read(fd, &z, 1) > 0) {
