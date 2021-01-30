@@ -32,6 +32,8 @@
 #include <rc/encoder.h>
 #include <signal.h>
 
+#include <simple_serial.h>
+
 #define FAIL(str) \
 fprintf(stderr, str); \
 rc_led_set(RC_LED_GREEN,0); \
@@ -339,6 +341,8 @@ int main(int argc, char *argv[])
 			FAIL("ERROR: failed to initialize printf_manager\n")
 		}
 	}
+
+	serial_read();
 
 	// set state to running and chill until something exits the program
 	rc_set_state(RUNNING);
