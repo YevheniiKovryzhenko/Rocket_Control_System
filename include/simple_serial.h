@@ -1,4 +1,4 @@
-#include <serial.h>
+#include <xbee_serial.h>
 #include <unistd.h>  // read / write
 #include <rc/start_stop.h>
 #include <rc/time.h>
