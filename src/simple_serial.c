@@ -9,7 +9,7 @@
 // static pthread_t serial_read_thread;
 // int * fd;
 
-int serial_start(char* serial_port, int baud_rate) {
+int serial_start() {
   // unsigned char c = 'D';
 
   // if (argc != 3) {
@@ -22,10 +22,10 @@ int serial_start(char* serial_port, int baud_rate) {
   //   return 1;
   // }
 
-  *fd = serial_open(*serial_port, baud_rate, 0);  // blocking == 1 now,
+  fd = serial_open("/dev/ttyGS0", 115200, 0);  // blocking == 1 now,
 
-  if (*fd == -1) {
-    printf("Failed to open Serial Port");
+  if (fd == -1) {
+    fprintf(stderr,"Failed to open Serial Port");
     return -1;
   }
   return 0;
@@ -35,7 +35,7 @@ void serial_read() {
   unsigned char z = 'D';
   while (1) {
     if (read(fd, &z, 1) > 0) {
-      printf(c);
+      printf("%c", z);
     }
   }
 }
@@ -43,7 +43,7 @@ void serial_read() {
 
 int serialer()
 {
-    if (serial_start('/dev/ttyGS0', 115200) != 0) {
+    if (serial_start() != 0) {
       fprintf(stderr, "ERROR in opening serial\n");
         return -1;
     }
