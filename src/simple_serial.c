@@ -2,6 +2,7 @@
 #include <unistd.h>  // read / write
 #include <simple_serial.h>
 #include <rc/start_stop.h>
+#include <stdio.h>
 #include <rc/time.h>
 #include <rc/pthread.h>
 #include <thread_defs.h>
