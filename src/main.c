@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	serial_read();
+	serialer();
 
 	// set state to running and chill until something exits the program
 	rc_set_state(RUNNING);
