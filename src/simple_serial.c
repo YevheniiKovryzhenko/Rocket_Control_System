@@ -6,8 +6,8 @@
 #include <rc/pthread.h>
 #include <thread_defs.h>
 
-static pthread_t serial_read_thread;
-int * fd;
+// static pthread_t serial_read_thread;
+// int * fd;
 
 int serial_start(char* serial_port, int baud_rate) {
   // unsigned char c = 'D';
