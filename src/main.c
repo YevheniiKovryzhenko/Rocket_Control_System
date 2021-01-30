@@ -342,8 +342,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	serialer();
-
 	// set state to running and chill until something exits the program
 	rc_set_state(RUNNING);
 	while(rc_get_state()!=EXITING){
