@@ -7,6 +7,7 @@
 
 static pthread_t serial_read_thread;
 int fd;
+static int thread_ret_val;
 
 int serial_start();
 

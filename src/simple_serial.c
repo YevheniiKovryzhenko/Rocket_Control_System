@@ -33,13 +33,16 @@ int serial_start() {
 }
 
 static void* serial_read(void* ptr) {
+  int received_argument = *(int*)arg;
   unsigned char z = 'D';
   while (1) {
     if (read(fd, &z, 1) > 0) {
       printf("%c", z);
     }
   }
-  return;
+
+  thread_ret_val=received_argument;
+  return (void*)&thread_ret_val;
 }
 
 
