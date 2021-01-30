@@ -43,7 +43,7 @@ void serial_read() {
 
 int serialer()
 {
-    if (serial_start('/dev/ttyUSB0', 115200) != 0) {
+    if (serial_start('/dev/ttyGS0', 115200) != 0) {
       fprintf(stderr, "ERROR in opening serial\n");
         return -1;
     }
