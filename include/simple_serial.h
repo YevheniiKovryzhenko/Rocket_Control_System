@@ -10,6 +10,6 @@ int fd;
 
 int serial_start();
 
-void serial_read();
+static void* serial_read(void* ptr);
 
 int serialer();

@@ -32,7 +32,7 @@ int serial_start() {
   return 0;
 }
 
-void serial_read(void* ptr) {
+static void* serial_read(void* ptr) {
   unsigned char z = 'D';
   while (1) {
     if (read(fd, &z, 1) > 0) {
