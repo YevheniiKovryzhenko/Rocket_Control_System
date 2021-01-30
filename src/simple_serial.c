@@ -58,4 +58,6 @@ int serialer()
         fprintf(stderr, "ERROR in input_manager_init, failed to start thread\n");
         return -1;
     }
+
+    return 0;
 }
