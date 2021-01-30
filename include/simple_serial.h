@@ -8,7 +8,7 @@
 static pthread_t serial_read_thread;
 int fd;
 
-int serial_start(char* serial_port, int baud_rate);
+int serial_start();
 
 void serial_read();
 
