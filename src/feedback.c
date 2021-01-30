@@ -56,6 +56,12 @@ static void __rpy_init(void)
 	printf("YAW CONTROLLER:\n");
 	rc_filter_print(D_yaw);
 #endif
+	printf("ROLL CONTROLLER:\n");
+	rc_filter_print(D_roll);
+	printf("PITCH CONTROLLER:\n");
+	rc_filter_print(D_pitch);
+	printf("YAW CONTROLLER:\n");
+	rc_filter_print(D_yaw);
 
 	// save original gains as we will scale these by battery voltage later
 	D_roll_gain_orig	= D_roll.gain;
@@ -211,6 +217,8 @@ int feedback_march(void)
 		D_pitch.gain = D_pitch_gain_orig * settings.v_nominal / state_estimate.v_batt_lp;
 		u[VEC_PITCH] = rc_filter_march(&D_pitch, setpoint.pitch - state_estimate.pitch);
 		mix_add_input(u[VEC_PITCH], VEC_PITCH, mot);
+
+		printf("\n setpoint.pitch = %f \n state_estimate.pitch = %f\n D_pitch.gain = %f\n u = %f\n ", setpoint.pitch, state_estimate.pitch, D_pitch.gain, u[VEC_PITCH]);
 
 		// Yaw
 		mix_check_saturation(VEC_YAW, mot, &min, &max);

@@ -16,10 +16,10 @@ disarmed. Signal should be in the range of [500 2500]us.
 For details, see rc_servo_send_pulse_us().
 */
 static double servos_lim[8][3] = \
-{ {1500.0, 1500.0, 2000.0}, \
-{1500.0, 1500.0, 2000.0}, \
-{1500.0, 1500.0, 2000.0}, \
-{1500.0, 1500.0, 2000.0}, \
+{ {1550.0, 1550.0, 2000.0}, \
+{1550.0, 1550.0, 1980.0}, \
+{1550.0, 1550.0, 2020.0}, \
+{1520.0, 1520.0, 2070.0}, \
 {1500.0, 1500.0, 2000.0}, \
 {1500.0, 1500.0, 2000.0}, \
 {1500.0, 1500.0, 2000.0}, \
@@ -106,11 +106,18 @@ int servos_disarm(void)
 
     //power-off servo rail:
     rc_servo_power_rail_en(0);
+
+    sstate.arm_state = DISARMED;
     return 0;
 }
 
 int servos_march(int i, double* mot)
 {
+    if (sstate.arm_state == DISARMED) {
+        //printf("WARNING: trying to march servos when servos disarmed\n");
+        return 0;
+    }
+
     // need to do mapping between [0 1] and servo signal in us
     sstate.m_us[i] = __map_servo_signal_ms(mot, &servos_lim[i][3]);
 

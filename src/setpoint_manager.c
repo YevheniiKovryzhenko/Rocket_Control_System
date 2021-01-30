@@ -58,6 +58,11 @@ void __update_app(void)
 	return;
 }
 
+double __finddt_s(uint64_t ti) {
+	double dt_s = (rc_nanos_since_boot() - ti) / (1e9);
+	return dt_s;
+}
+
 int setpoint_manager_init(void)
 {
 	if(setpoint.initialized){
@@ -65,7 +70,10 @@ int setpoint_manager_init(void)
 		return -1;
 	}
 	memset(&setpoint,0,sizeof(setpoint_t));
-	setpoint.initialized = 1;
+	
+	user_input.flight_mode	= IDLE;
+	setpoint.init_time		= rc_nanos_since_boot();
+	setpoint.initialized	= 1;
 	return 0;
 }
 
@@ -83,6 +91,22 @@ int setpoint_manager_update(void)
 		return -1;
 	}
 
+	//for testing:
+	if (__finddt_s(setpoint.init_time) > 10 && __finddt_s(setpoint.init_time) < 20)
+	{
+		user_input.requested_arm_mode = ARMED;
+	}
+	if (__finddt_s(setpoint.init_time) > 20 && __finddt_s(setpoint.init_time) < 60)
+	{
+		//user_input.requested_arm_mode = DISARMED;
+		user_input.flight_mode = YP_TEST;
+	}
+	
+	if (__finddt_s(setpoint.init_time) > 60)
+	{
+		user_input.requested_arm_mode = DISARMED;
+	}
+
 	// if PAUSED or UNINITIALIZED, do nothing
 	if(rc_get_state()!=RUNNING) return 0;
 
@@ -95,8 +119,6 @@ int setpoint_manager_update(void)
 
 	// finally, switch between flight modes and adjust setpoint properly
 	switch(user_input.flight_mode){
-
-
 	case IDLE:
 		// configure which controllers are enabled
 		setpoint.en_alt_ctrl	= 0;
@@ -107,8 +129,8 @@ int setpoint_manager_update(void)
 		setpoint.pitch	= 0;
 		setpoint.yaw	= 0;
 		setpoint.alt	= 0;
+		
 		break;
-
 	case APP_CTRL:
 		// configure which controllers are enabled
 		setpoint.en_alt_ctrl	= 1;
