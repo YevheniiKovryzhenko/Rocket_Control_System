@@ -32,8 +32,6 @@
 #include <rc/encoder.h>
 #include <signal.h>
 
-#include <simple_serial.h>
-
 #define FAIL(str) \
 fprintf(stderr, str); \
 rc_led_set(RC_LED_GREEN,0); \

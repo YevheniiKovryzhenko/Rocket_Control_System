@@ -56,12 +56,6 @@ static void __rpy_init(void)
 	printf("YAW CONTROLLER:\n");
 	rc_filter_print(D_yaw);
 #endif
-	printf("ROLL CONTROLLER:\n");
-	rc_filter_print(D_roll);
-	printf("PITCH CONTROLLER:\n");
-	rc_filter_print(D_pitch);
-	printf("YAW CONTROLLER:\n");
-	rc_filter_print(D_yaw);
 
 	// save original gains as we will scale these by battery voltage later
 	D_roll_gain_orig	= D_roll.gain;
@@ -188,6 +182,11 @@ int feedback_march(void)
 		mix_check_saturation(VEC_X, mot, &min, &max);
 		if (max > MAX_X_COMPONENT)  max = MAX_X_COMPONENT;
 		if (min < -MAX_X_COMPONENT) min = -MAX_X_COMPONENT;
+		if (max < 0.01 * MAX_X_COMPONENT && min > -0.01 * MAX_X_COMPONENT) {
+			//printf("WARNING: controller bounds are zeros, changing them to to MAX_X_COMPONENT...\n");
+			max = MAX_X_COMPONENT;
+			min = -MAX_X_COMPONENT;
+		}
 		rc_filter_enable_saturation(&D_X, min, max);
 		D_X.gain = D_X_gain_orig * settings.v_nominal / state_estimate.v_batt_lp; //updating the gains based on battery voltage
 		u[VEC_X] = rc_filter_march(&D_X, setpoint.alt - state_estimate.proj_app); //this has to be the error between target and predicted value
@@ -202,6 +201,13 @@ int feedback_march(void)
 		mix_check_saturation(VEC_ROLL, mot, &min, &max);
 		if (max > MAX_ROLL_COMPONENT)  max = MAX_ROLL_COMPONENT;
 		if (min < -MAX_ROLL_COMPONENT) min = -MAX_ROLL_COMPONENT;
+		//must fix an issue with [-0.0,+0.0] saturation:
+		if (max < 0.01 * MAX_ROLL_COMPONENT && min > -0.01 * MAX_ROLL_COMPONENT) {
+			//printf("WARNING: controller bounds are zeros, changing them to to MAX_ROLL_COMPONENT...\n");
+			max = MAX_ROLL_COMPONENT;
+			min = -MAX_ROLL_COMPONENT;
+		}
+		
 		rc_filter_enable_saturation(&D_roll, min, max);
 		D_roll.gain = D_roll_gain_orig * settings.v_nominal / state_estimate.v_batt_lp;
 		u[VEC_ROLL] = rc_filter_march(&D_roll, setpoint.roll - state_estimate.roll);
@@ -213,21 +219,37 @@ int feedback_march(void)
 		mix_check_saturation(VEC_PITCH, mot, &min, &max);
 		if (max > MAX_PITCH_COMPONENT)  max = MAX_PITCH_COMPONENT;
 		if (min < -MAX_PITCH_COMPONENT) min = -MAX_PITCH_COMPONENT;
+		//printf("\n max = %f and min = %f \n", max, min);
+		//must fix an issue with [-0.0,+0.0] saturation:
+		if (max < 0.01 * MAX_PITCH_COMPONENT && min > -0.01 * MAX_PITCH_COMPONENT) {
+			//printf("WARNING: controller bounds are zeros, changing them to to MAX_PITCH_COMPONENT...\n");
+			max = MAX_PITCH_COMPONENT;
+			min = -MAX_PITCH_COMPONENT;
+		}
 		rc_filter_enable_saturation(&D_pitch, min, max);
 		D_pitch.gain = D_pitch_gain_orig * settings.v_nominal / state_estimate.v_batt_lp;
-		u[VEC_PITCH] = rc_filter_march(&D_pitch, setpoint.pitch - state_estimate.pitch);
+		u[VEC_PITCH] = rc_filter_march(&D_pitch, setpoint.pitch - state_estimate.pitch); //full PID control
+		//u[VEC_PITCH] = (setpoint.pitch - state_estimate.pitch) * 2.0; //test using just a P controller
 		mix_add_input(u[VEC_PITCH], VEC_PITCH, mot);
-
-		printf("\n setpoint.pitch = %f \n state_estimate.pitch = %f\n D_pitch.gain = %f\n u = %f\n ", setpoint.pitch, state_estimate.pitch, D_pitch.gain, u[VEC_PITCH]);
+		
+		//printf("\n setpoint.pitch = %f \n state_estimate.pitch = %f\n D_pitch.gain = %f\n u = %f\n ", setpoint.pitch, state_estimate.pitch, D_pitch.gain, u[VEC_PITCH]);
 
 		// Yaw
 		mix_check_saturation(VEC_YAW, mot, &min, &max);
 		if (max > MAX_YAW_COMPONENT)  max = MAX_YAW_COMPONENT;
 		if (min < -MAX_YAW_COMPONENT) min = -MAX_YAW_COMPONENT;
+		//must fix an issue with [-0.0,+0.0] saturation:
+		if (max < 0.01 * MAX_YAW_COMPONENT && min > -0.01 * MAX_YAW_COMPONENT) {
+			//printf("WARNING: controller bounds are zeros, changing them to to MAX_YAW_COMPONENT...\n");
+			max = MAX_YAW_COMPONENT;
+			min = -MAX_YAW_COMPONENT;
+		}
 		rc_filter_enable_saturation(&D_yaw, min, max);
 		D_yaw.gain = D_yaw_gain_orig * settings.v_nominal / state_estimate.v_batt_lp;
 		u[VEC_YAW] = rc_filter_march(&D_yaw, setpoint.yaw - state_estimate.yaw);
 		mix_add_input(u[VEC_YAW], VEC_YAW, mot);
+
+		//printf("\n mot[0] = %f, mot[1] = %f, mot[2] = %f, mot[3] = %f \n", mot[0], mot[1], mot[2], mot[3]);
 	}
 
 	/***************************************************************************
@@ -243,6 +265,8 @@ int feedback_march(void)
 
 		// finally send mapped signal to servos:
 		servos_march(i, &mot[i]);
+
+		//printf("\n sstate.m_us[0] = %f, sstate.m_us[1] = %f, sstate.m_us[2] = %f, sstate.m_us[3] = %f, sstate.m_us[4] = %f \n", sstate.m_us[0], sstate.m_us[1], sstate.m_us[2], sstate.m_us[3], sstate.m_us[4]);
 	}
 
 	/***************************************************************************

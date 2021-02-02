@@ -42,7 +42,7 @@ int __set_motor_nom_pulse(void)
 double __map_servo_signal_ms(double* m, double* servos_lim) {
     // sanity check
     if (m[0] > 1.0 || m[0] < 0.0) {
-        printf("ERROR: desired thrust t must be between 0.0 & 1.0\n");
+        printf("ERROR: desired thrust must be between 0.0 & 1.0\n");
         return -1;
     }
 
@@ -76,7 +76,7 @@ int servos_arm(void)
 {
     if (sstate.arm_state == ARMED) {
         printf("WARNING: trying to arm when servos are already armed\n");
-        return -1;
+        return 0;
     }
     if (sstate.initialized != 1)
     {
@@ -125,7 +125,7 @@ int servos_march(int i, double* mot)
     //if (rc_servo_send_pulse_normalized(i, mot) == -1) return -1;
 
     //send servo signals using Pulse Width in microseconds
-    if (rc_servo_send_pulse_us(i, sstate.m_us[i]) == -1) return -1;
+    if (rc_servo_send_pulse_us(i+1, sstate.m_us[i]) == -1) return -1;
 
     return 0;
 }

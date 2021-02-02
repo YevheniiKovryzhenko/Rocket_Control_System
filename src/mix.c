@@ -37,10 +37,10 @@ static double mix_4x[][6] = { \
  * rows: actuators 1-4
  */
 static double mix_4plus[][6] = { \
-{-1.0,   0.0,  0.0,   0.0,  -0.5,   0.0},\
-{-1.0,   0.0,  0.0,   0.0,   0.0,   0.5},\
 {-1.0,   0.0,  0.0,   0.0,   0.5,   0.0},\
-{-1.0,   0.0,  0.0,   0.0,   0.0,  -0.5}};
+{-1.0,   0.0,  0.0,   0.0,   0.0,  -0.5},\
+{-1.0,   0.0,  0.0,   0.0,  -0.5,   0.0},\
+{-1.0,   0.0,  0.0,   0.0,   0.0,   0.5}};
 
 
 static double (*mix_matrix)[6];
@@ -131,10 +131,26 @@ int mix_check_saturation(int ch, double* mot, double* min, double* max)
 			fprintf(stderr,"ERROR: motor channel already out of bounds\n");
 			return -1;
 		}
+		/*if (mot[i] == 0.0) {
+			//printf("\n mot[i] == 0.0, i = %d\n", i);
+			if (mix_matrix[i][ch] == 0.0) continue;
+			
+			
+			// for positive entry in mix matrix
+			if (mix_matrix[i][ch] > 0.0)	tmp = (1.0) / mix_matrix[i][ch];
+			// for negative entry in mix matrix
+			else tmp = -1.0 / mix_matrix[i][ch];
+			// set new upper limit if lower than current
+			if (tmp < new_max) new_max = tmp;
+		}*/
 	}
+
+	
 
 	// find max positive input
 	for(i=0;i<rotors;i++){
+		//printf("\n i = %d, Ch =%d  mix_matrix[i][ch] = %f and mot[i] = %f\n", i, ch, mix_matrix[i][ch],mot[i]);
+
 		// if mix channel is 0, impossible to saturate
 		if(mix_matrix[i][ch]==0.0) continue;
 		// for positive entry in mix matrix
@@ -144,6 +160,7 @@ int mix_check_saturation(int ch, double* mot, double* min, double* max)
 		// set new upper limit if lower than current
 		if(tmp<new_max) new_max = tmp;
 	}
+	//printf(" new_max = %f ", new_max);
 
 	// find min (most negative) input
 	for(i=0;i<rotors;i++){
@@ -156,6 +173,7 @@ int mix_check_saturation(int ch, double* mot, double* min, double* max)
 		// set new upper limit if lower than current
 		if(tmp>new_min) new_min = tmp;
 	}
+	//printf(" new_min = %f \n", new_min);
 
 	*min = new_min;
 	*max = new_max;

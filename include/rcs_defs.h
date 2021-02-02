@@ -50,9 +50,9 @@ typedef enum arm_state_t {
 #define BMP_RATE_DIV		10	// optionally sample bmp less frequently than mpu
 
 // controller absolute limits
-#define MAX_ROLL_COMPONENT	0.4
-#define MAX_PITCH_COMPONENT	2.0
-#define MAX_YAW_COMPONENT	0.4
+#define MAX_ROLL_COMPONENT	1.0
+#define MAX_PITCH_COMPONENT	1.0
+#define MAX_YAW_COMPONENT	1.0
 
 #define MAX_X_COMPONENT		1.0
 
