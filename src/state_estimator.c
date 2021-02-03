@@ -37,6 +37,20 @@ static rc_filter_t batt_lp = RC_FILTER_INITIALIZER;
 static rc_kalman_t alt_kf = RC_KALMAN_INITIALIZER;
 static rc_filter_t acc_lp = RC_FILTER_INITIALIZER;
 
+// This function estimates the appogee using current state of the vehicle
+static void __projected_altitude(void) {
+	state_estimate.proj_app = fabs(state_estimate.alt_bmp_vel * 
+		state_estimate.alt_bmp_vel) / 
+		(2.0 * (-state_estimate.alt_bmp_accel)) * 
+		log(fabs((state_estimate.alt_bmp_accel + GRAVITY) / GRAVITY)) +
+		state_estimate.alt_bmp;
+
+	//printf("\n First: %f", state_estimate.alt_bmp_accel / GRAVITY);
+	//printf("\n Second: %f", fabs((state_estimate.alt_bmp_accel) / GRAVITY));
+	//printf("\n Third: %f", log(fabs((state_estimate.alt_bmp_accel) / GRAVITY)));
+	return;
+}
+
 
 static void __batt_init(void)
 {
@@ -432,7 +446,7 @@ static void __altitude_march(void)
 
 		// calculate acceleration and smooth it just a tad
 		// put result in u for kalman and flip sign since with altitude, positive
-		// is up whereas acceleration in Z points down.
+		// is up whereas acceleration in X points up.
 		rc_filter_march(&acc_lp, accel_vec[0] - GRAVITY);
 		u.d[0] = acc_lp.newest_output;
 
@@ -484,8 +498,10 @@ static void __altitude_march(void)
 	// altitude estimate
 	state_estimate.alt_bmp		= alt_kf.x_est.d[0];
 	state_estimate.alt_bmp_vel	= alt_kf.x_est.d[1];
-	state_estimate.alt_bmp_accel= alt_kf.x_est.d[2];
-
+	//state_estimate.alt_bmp_accel= alt_kf.x_est.d[2]; //does not work rn (very slow updates)
+	state_estimate.alt_bmp_accel = acc_lp.newest_output; //quick, slightly filtered data
+	// Estimate apogee altitude:
+	__projected_altitude(); //updates state_estimate.proj_app
 	return;
 }
 

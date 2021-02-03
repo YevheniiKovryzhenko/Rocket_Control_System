@@ -62,6 +62,7 @@ typedef struct settings_t{
 	///@{
 	int printf_arm;
 	int printf_altitude;
+	int printf_proj_app;
 	int printf_rpy;
 	int printf_setpoint;
 	int printf_u;

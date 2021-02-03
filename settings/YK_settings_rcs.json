@@ -19,6 +19,7 @@
 
 	"printf_arm": true,
 	"printf_altitude": true,
+	"printf_proj_app":  true,
 	"printf_position": false,
 	"printf_rpy": true,
 	"printf_sticks": false,

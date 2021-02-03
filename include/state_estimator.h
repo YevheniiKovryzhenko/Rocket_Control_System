@@ -95,10 +95,10 @@ typedef struct state_estimate_t{
 	 */
 	///@{
 	double bmp_pressure_raw;///< raw barometer pressure in Pascals
-	double alt_bmp_raw;	///< altitude estimate using only bmp from sea level (m)
-	double alt_bmp;		///< altitude estimate using kalman filter (IMU & bmp)
-	double alt_bmp_vel;	///< z velocity estimate using kalman filter (IMU & bmp)
-	double alt_bmp_accel;	///< z accel estimate using kalman filter (IMU & bmp)
+	double alt_bmp_raw;		///< altitude estimate using only bmp from sea level (m)
+	double alt_bmp;			///< altitude estimate using kalman filter (IMU & bmp)
+	double alt_bmp_vel;		///< vertical velocity estimate using kalman filter (IMU & bmp)
+	double alt_bmp_accel;	///< vertical accel estimate using kalman filter (IMU & bmp)
 	///@}
 
 	/** @name Motion Capture data

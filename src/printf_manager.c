@@ -67,6 +67,9 @@ static int __print_header()
 	if(settings.printf_altitude){
 		printf("%s alt(m) |altdot|", __next_colour());
 	}
+	if (settings.printf_proj_app) {
+		printf("%saltacc|APP(m)|", __next_colour());
+	}
 	if(settings.printf_rpy){
 		printf("%s roll|pitch| yaw |", __next_colour());
 	}
@@ -144,6 +147,11 @@ static void* __printf_manager_func(__attribute__ ((unused)) void* ptr)
 			printf("%s%+5.2f |%+5.2f |",	__next_colour(),\
 						state_estimate.alt_bmp,\
 						state_estimate.alt_bmp_vel);
+		}
+		if (settings.printf_proj_app) {
+			printf("%s%+5.2f |%+5.2f |", __next_colour(), \
+				state_estimate.alt_bmp_accel,\
+				state_estimate.proj_app);
 		}
 		if(settings.printf_rpy){
 			printf(KCYN);

@@ -547,6 +547,7 @@ int settings_load_from_file(char* path)
 	// PRINTF OPTIONS
 	PARSE_BOOL(printf_arm)
 	PARSE_BOOL(printf_altitude)
+	PARSE_BOOL(printf_proj_app)
 	PARSE_BOOL(printf_rpy)
 	PARSE_BOOL(printf_setpoint)
 	PARSE_BOOL(printf_u)
