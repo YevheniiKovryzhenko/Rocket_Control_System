@@ -11,7 +11,7 @@
 // int * fd;
 
 int serial_start() {
-  fd = serial_open("/dev/ttyGS0", 115200, 0);  // blocking == 1 now,
+  fd = serial_open("/dev/ttyACM0", 115200, 0);  // blocking == 1 now,
 
   if (fd == -1) {
     fprintf(stderr,"Failed to open Serial Port");
