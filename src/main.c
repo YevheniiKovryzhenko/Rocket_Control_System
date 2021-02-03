@@ -296,6 +296,11 @@ int main(int argc, char *argv[])
 		FAIL("ERROR: failed to init feedback controller")
 	}
 
+	printf("Initializing simple serial\n");
+	if(simple_serial_init()<0){
+		FAIL("ERROR: failed to initialize input_manager\n")
+	}
+
 	// start the IMU
 	rc_mpu_config_t mpu_conf			= rc_mpu_default_config();
 	mpu_conf.i2c_bus					= I2C_BUS;
@@ -342,8 +347,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	serialer();
-
 	// set state to running and chill until something exits the program
 	rc_set_state(RUNNING);
 	while(rc_get_state()!=EXITING){
@@ -362,6 +365,7 @@ int main(int argc, char *argv[])
 	printf_cleanup();
 	log_manager_cleanup();
 	rc_encoder_cleanup();
+	simple_serial_cleanup();
 
 	// turn off red LED and blink green to say shut down was safe
 	rc_led_set(RC_LED_RED,0);

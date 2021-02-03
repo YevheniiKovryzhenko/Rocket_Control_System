@@ -13,4 +13,5 @@ int serial_start();
 
 static void* serial_read(void* ptr);
 
-int serialer();
+int simple_serial_init();
+int simple_serial_cleanup();

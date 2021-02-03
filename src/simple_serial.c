@@ -11,18 +11,6 @@
 // int * fd;
 
 int serial_start() {
-  // unsigned char c = 'D';
-
-  // if (argc != 3) {
-  //   printf("Usage: " << endl;
-  //   printf(" ./receiveSerial <Serial Port> <Baud Rate> \n\n")
-
-  //   printf(" <Serial Port> = /dev/ttyUSB0, etc..." << endl;
-  //   printf(" <Baud Rate> = 9600,115200, etc..." << endl;
-
-  //   return 1;
-  // }
-
   fd = serial_open("/dev/ttyGS0", 115200, 0);  // blocking == 1 now,
 
   if (fd == -1) {
@@ -35,19 +23,20 @@ int serial_start() {
 static void* serial_read(void* ptr) {
   int received_argument = *(int*)ptr;
   unsigned char z = 'D';
-  while (1) {
-    if (read(fd, &z, 1) > 0) {
-      printf("%c", z);
+
+  while (rc_get_state() != EXITING) {
+    while (1) {
+      if (read(fd, &z, 1) > 0) {
+        printf("%c", z);
+      }
     }
   }
-
   thread_ret_val=received_argument;
   return (void*)&thread_ret_val;
 }
 
 
-int serialer()
-{
+int simple_serial_init() {
     if (serial_start() != 0) {
       fprintf(stderr, "ERROR in opening serial\n");
         return -1;
@@ -60,4 +49,13 @@ int serialer()
     }
 
     return 0;
+}
+
+int simple_serial_cleanup() {
+  if (rc_pthread_timed_join(serial_read_thread, NULL, INPUT_MANAGER_TOUT) == 1)
+  {
+    fprintf(stderr, "WARNING: in serialer_cleanup, thread join timeout\n");
+    return -1;
+  }
+  return 0;
 }
