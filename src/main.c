@@ -297,14 +297,6 @@ int main(int argc, char *argv[])
 		FAIL("ERROR: failed to init feedback controller")
 	}
 
-	// printf("Initializing simple serial\n");
-	// struct simple_serial_t teensy;
-	// strcpy(teensy.port, "/dev/ttyACM0");
-	// teensy.baud_rate = 115200;
-	// if(simple_serial_init(&teensy)<0){
-	// 	FAIL("ERROR: failed to initialize simple_serial_init\n");
-	// }
-
 	// start the IMU
 	rc_mpu_config_t mpu_conf			= rc_mpu_default_config();
 	mpu_conf.i2c_bus					= I2C_BUS;
@@ -324,6 +316,14 @@ int main(int argc, char *argv[])
 	if(rc_mpu_initialize_dmp(&mpu_data, mpu_conf)){
 		fprintf(stderr,"ERROR: failed to start MPU DMP\n");
 		return -1;
+	}
+
+	printf("Initializing simple serial\n");
+	struct simple_serial_t teensy;
+	strcpy(teensy.port, "/dev/ttyACM0");
+	teensy.baud_rate = 115200;
+	if(simple_serial_init(&teensy)<0){
+		FAIL("ERROR: failed to initialize simple_serial_init\n");
 	}
 
 	// final setup
@@ -369,7 +369,7 @@ int main(int argc, char *argv[])
 	printf_cleanup();
 	log_manager_cleanup();
 	rc_encoder_cleanup();
-	// simple_serial_cleanup(&teensy);
+	simple_serial_cleanup(&teensy);
 
 	// turn off red LED and blink green to say shut down was safe
 	rc_led_set(RC_LED_RED,0);
