@@ -28,7 +28,7 @@ void* serial_read(void* ptr) {
       printf("%c", z);
     }
   }
-  thread_ret_val=received_argument;
+  
   return NULL;
 }
 
