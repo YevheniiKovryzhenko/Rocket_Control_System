@@ -297,8 +297,11 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Initializing simple serial\n");
-	if(simple_serial_init()<0){
-		FAIL("ERROR: failed to initialize input_manager\n")
+	simple_serial_t teensy;
+	teensy.port = "ACM0"
+	teensy.baudrate = 115200;
+	if(simple_serial_init(teensy)<0){
+		FAIL("ERROR: failed to initialize simple_serial_init\n")
 	}
 
 	// start the IMU

@@ -5,13 +5,14 @@
 #include <rc/pthread.h>
 #include <thread_defs.h>
 
-static pthread_t serial_read_thread;
-int fd;
-static int thread_ret_val;
-
-int serial_start();
+struct simple_serial_t {
+    pthread_t serial_read_thread;
+    int thread_ret_val;
+    char port[20];
+    int baud_rate;
+} simple_serial_t;
 
 void* serial_read(void* ptr);
 
-int simple_serial_init();
-int simple_serial_cleanup();
+int simple_serial_init(struct simple_serial_t *serial_device);
+int simple_serial_cleanup(struct simple_serial_t *serial_device);
