@@ -298,10 +298,10 @@ int main(int argc, char *argv[])
 
 	printf("Initializing simple serial\n");
 	simple_serial_t teensy;
-	teensy.port = "ACM0"
+	teensy.port = "ACM0";
 	teensy.baudrate = 115200;
-	if(simple_serial_init(teensy)<0){
-		FAIL("ERROR: failed to initialize simple_serial_init\n")
+	if(simple_serial_init(&teensy)<0){
+		FAIL("ERROR: failed to initialize simple_serial_init\n");
 	}
 
 	// start the IMU
@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
 	printf_cleanup();
 	log_manager_cleanup();
 	rc_encoder_cleanup();
-	simple_serial_cleanup();
+	simple_serial_cleanup(&teensy);
 
 	// turn off red LED and blink green to say shut down was safe
 	rc_led_set(RC_LED_RED,0);
