@@ -23,17 +23,21 @@ void* serial_read(void* ptr) {
 
 
 int simple_serial_init(struct simple_serial_t *serial_device) {
+    printf("Begin initialization");
     int fd = serial_open(serial_device->port, serial_device->baud_rate, 0);
     if (fd == -1) {
       fprintf(stderr, "ERROR in opening serial\n");
         return -1;
     }
+    printf("Begin initialization");
 
     // start thread
     if (rc_pthread_create(
           &serial_device->serial_read_thread, &serial_read, (void *)&fd, SCHED_FIFO, INPUT_MANAGER_PRI) == -1) {
         fprintf(stderr, "ERROR in simple_serial_init, failed to start thread\n");
         return -1;
+    } else {
+      printf("Serial thread is working!");
     }
 
     return 0;
