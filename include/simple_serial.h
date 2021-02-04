@@ -5,7 +5,7 @@
 #include <rc/pthread.h>
 #include <thread_defs.h>
 
-struct simple_serial_t {
+typedef struct simple_serial_t {
     pthread_t serial_read_thread;
     char port[20];
     int baud_rate;
