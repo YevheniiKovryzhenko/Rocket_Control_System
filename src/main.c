@@ -297,9 +297,9 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Initializing simple serial\n");
-	simple_serial_t teensy;
+	struct simple_serial_t teensy;
 	teensy.port = "ACM0";
-	teensy.baudrate = 115200;
+	teensy.baud_rate = 115200;
 	if(simple_serial_init(&teensy)<0){
 		FAIL("ERROR: failed to initialize simple_serial_init\n");
 	}
