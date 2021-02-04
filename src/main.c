@@ -33,6 +33,7 @@
 #include <signal.h>
 
 #include <simple_serial.h>
+#include <string.h>
 
 #define FAIL(str) \
 fprintf(stderr, str); \
