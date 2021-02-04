@@ -320,7 +320,7 @@ int main(int argc, char *argv[])
 
 	printf("Initializing simple serial\n");
 	struct simple_serial_t teensy;
-	strcpy(teensy.port, "/dev/ttyACM0");
+	strcpy(teensy.port, "/dev/ttyACM1");
 	teensy.baud_rate = 115200;
 	if(simple_serial_init(&teensy)<0){
 		FAIL("ERROR: failed to initialize simple_serial_init\n");
