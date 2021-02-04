@@ -41,7 +41,7 @@ int simple_serial_init() {
     // start thread
     if (rc_pthread_create(
             &serial_read_thread, &serial_read, NULL, SCHED_FIFO, INPUT_MANAGER_PRI) == -1) {
-        fprintf(stderr, "ERROR in input_manager_init, failed to start thread\n");
+        fprintf(stderr, "ERROR in simple_serial_init, failed to start thread\n");
         return -1;
     }
 
