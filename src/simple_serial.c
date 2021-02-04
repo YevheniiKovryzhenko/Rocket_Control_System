@@ -23,13 +23,13 @@ void* serial_read(void* ptr) {
 
 
 int simple_serial_init(struct simple_serial_t *serial_device) {
-    printf("Begin initialization");
+    printf("Begin serial initialization\n");
     int fd = serial_open(serial_device->port, serial_device->baud_rate, 0);
     if (fd == -1) {
       fprintf(stderr, "ERROR in opening serial\n");
         return -1;
     }
-    printf("Begin initialization");
+    printf("End serial initialization\n");
 
     // start thread
     if (rc_pthread_create(
