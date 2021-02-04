@@ -7,7 +7,6 @@
 
 struct simple_serial_t {
     pthread_t serial_read_thread;
-    int thread_ret_val;
     char port[20];
     int baud_rate;
 };
