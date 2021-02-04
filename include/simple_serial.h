@@ -11,7 +11,7 @@ static int thread_ret_val;
 
 int serial_start();
 
-static void* serial_read(void* ptr);
+void* serial_read(void* ptr);
 
 int simple_serial_init();
 int simple_serial_cleanup();

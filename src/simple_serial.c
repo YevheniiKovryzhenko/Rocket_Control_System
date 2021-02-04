@@ -20,24 +20,21 @@ int serial_start() {
   return 0;
 }
 
-static void* serial_read(void* ptr) {
-  int received_argument = *(int*)ptr;
+void* serial_read(void* ptr) {
   unsigned char z = 'D';
 
   while (rc_get_state() != EXITING) {
-    while (1) {
-      if (read(fd, &z, 1) > 0) {
-        printf("%c", z);
-      }
+    if (read(fd, &z, 1) > 0) {
+      printf("%c", z);
     }
   }
   thread_ret_val=received_argument;
-  return (void*)&thread_ret_val;
+  return NULL;
 }
 
 
 int simple_serial_init() {
-    if (serial_start() != 0) {
+    if (serial_start() == -1) {
       fprintf(stderr, "ERROR in opening serial\n");
         return -1;
     }
