@@ -9,11 +9,11 @@
 
 
 void* serial_read(void* ptr) {
-  int *fd = (int *)ptr;
+  int fd = (int *)ptr;
   unsigned char z = 'D';
 
   while (rc_get_state() != EXITING) {
-    if (read(*fd, &z, 1) > 0) {
+    if (read(fd, &z, 1) > 0) {
       printf("%c", z);
     }
   }
@@ -33,7 +33,7 @@ int simple_serial_init(struct simple_serial_t *serial_device) {
 
     // start thread
     if (rc_pthread_create(
-          serial_device->serial_read_thread, &serial_read, (void *)&fd, SCHED_FIFO, INPUT_MANAGER_PRI) == -1) {
+          &serial_device->serial_read_thread, &serial_read, (void *)&fd, SCHED_FIFO, INPUT_MANAGER_PRI) == -1) {
         fprintf(stderr, "ERROR in simple_serial_init, failed to start thread\n");
         return -1;
     } else {
@@ -44,7 +44,7 @@ int simple_serial_init(struct simple_serial_t *serial_device) {
 }
 
 int simple_serial_cleanup(struct simple_serial_t *serial_device) {
-  if (rc_pthread_timed_join(&serial_device->serial_read_thread, NULL, INPUT_MANAGER_TOUT) == 1)
+  if (rc_pthread_timed_join(serial_device->serial_read_thread, NULL, 1) == 1)
   {
     fprintf(stderr, "WARNING: in simple_serial_cleanup, thread join timeout\n");
     return -1;
