@@ -98,6 +98,7 @@ int __flight_status_update(void)
 	if (fstate.arm_state == DISARMED)
 	{
 		flight_status = WAIT;
+		user_input.flight_mode = IDLE; //shoud never switch modes on its own while disarmed
 
 	}
 	else //if armed - start checking for events
@@ -138,6 +139,19 @@ int __flight_status_update(void)
 		{
 			//accept the fact the motor is burning now
 			flight_status = POWERED_ASCENT;
+		}
+		else if (flight_status == POWERED_ASCENT)
+		{
+			//need to detect motor burnout:
+			if (state_estimate.alt_bmp_vel <= 0.0 && state_estimate.alt_bmp_accel <= 0.0)
+			{
+				flight_status = UNPOWERED_ASCENT; //should we include a time delay here?
+			}
+		}
+		else if (flight_status = UNPOWERED_ASCENT)
+		{
+			//finally! here's when we can switch the flight mode to appogee control and do any active control
+			user_input.flight_mode = APP_CTRL;
 		}
 	}
 
