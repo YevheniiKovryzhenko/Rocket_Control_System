@@ -32,6 +32,9 @@
 #include <rc/encoder.h>
 #include <signal.h>
 
+#include <simple_serial.h>
+#include <string.h>
+
 #define FAIL(str) \
 fprintf(stderr, str); \
 rc_led_set(RC_LED_GREEN,0); \
@@ -315,6 +318,14 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	printf("Initializing simple serial\n");
+	struct simple_serial_t teensy;
+	strcpy(teensy.port, "/dev/ttyACM0");
+	teensy.baud_rate = 115200;
+	if(simple_serial_init(&teensy)<0) {
+		FAIL("ERROR: failed to initialize simple_serial_init\n");
+	}
+
 	// final setup
 	if(rc_make_pid_file()!=0){
 		FAIL("ERROR: failed to make a PID file\n")
@@ -358,6 +369,7 @@ int main(int argc, char *argv[])
 	printf_cleanup();
 	log_manager_cleanup();
 	rc_encoder_cleanup();
+	simple_serial_cleanup(&teensy);
 
 	// turn off red LED and blink green to say shut down was safe
 	rc_led_set(RC_LED_RED,0);
