@@ -24,6 +24,14 @@
 #define XYZ_MAX_ERROR	700.0 ///< meters.
 
 setpoint_t setpoint; // extern variable in setpoint_manager.h
+flight_status_t flight_status;
+events_t events;
+
+//This is a shortcut function for calculating time elapsed since ti
+double __finddt_s(uint64_t ti) {
+	double dt_s = (rc_nanos_since_boot() - ti) / (1e9);
+	return dt_s;
+}
 
 
 void __update_app(void)
@@ -58,11 +66,6 @@ void __update_app(void)
 	return;
 }
 
-double __finddt_s(uint64_t ti) {
-	double dt_s = (rc_nanos_since_boot() - ti) / (1e9);
-	return dt_s;
-}
-
 int setpoint_manager_init(void)
 {
 	if(setpoint.initialized){
@@ -70,10 +73,74 @@ int setpoint_manager_init(void)
 		return -1;
 	}
 	memset(&setpoint,0,sizeof(setpoint_t));
+
+	//Need these for __flight_status_update()
+	flight_status		= WAIT;
+	events.burnout_fl	= 0;
+	events.ignition_fl	= 0;
+
 	
 	user_input.flight_mode	= IDLE;
 	setpoint.init_time		= rc_nanos_since_boot();
 	setpoint.initialized	= 1;
+	return 0;
+}
+
+/* __flight_status_update
+*
+* this function updates the flight status
+*
+* returns> 0 if sucessfull -1 on failure
+*/
+int __flight_status_update(void)
+{
+	//Check flight status:
+	if (fstate.arm_state == DISARMED)
+	{
+		flight_status = WAIT;
+
+	}
+	else //if armed - start checking for events
+	{
+		if (flight_status == WAIT)
+		{
+			//make sure evrything is armed and ready:
+			if (user_input.requested_arm_mode == ARMED) {
+				if (fstate.arm_state == DISARMED) feedback_arm();
+				if (sstate.arm_state == DISARMED) servos_arm();
+			}
+
+			//This should happen once the system just got armed (on the launchpad)
+			events.ground_alt = state_estimate.alt_bmp;
+
+			flight_status = STANDBY;
+		}
+		else if (flight_status == STANDBY)
+		{
+			if (fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
+			{
+				events.init_time = rc_nanos_since_boot();
+				events.ignition_alt = state_estimate.alt_bmp;
+				events.ignition_fl = 1;
+				events.init_time = rc_nanos_since_boot();
+				flight_status = MOTOR_IGNITION;
+
+			}
+			else
+			{
+				//reset flags if the ignition has not been confirmed
+				events.ignition_fl = 0;
+
+				flight_status = STANDBY;
+			}
+		}
+		else if (flight_status == MOTOR_IGNITION && __finddt_s(events.init_time) >= settings.event_ignition_delay_s && events.ignition_fl)
+		{
+			//accept the fact the motor is burning now
+			flight_status = POWERED_ASCENT;
+		}
+	}
+
 	return 0;
 }
 
@@ -88,6 +155,11 @@ int setpoint_manager_update(void)
 
 	if(user_input.initialized==0){
 		fprintf(stderr, "ERROR in setpoint_manager_update, input_manager not initialized yet\n");
+		return -1;
+	}
+
+	if (__flight_status_update() != 0) {
+		fprintf(stderr, "ERROR in __flight_status_update.\n");
 		return -1;
 	}
 
@@ -181,7 +253,7 @@ int setpoint_manager_update(void)
 	// arm feedback and servos when requested
 	if(user_input.requested_arm_mode == ARMED){
 		if(fstate.arm_state == DISARMED) feedback_arm();
-		if(sstate.arm_state == DISARMED) servos_arm(); //is this safe? (probably need to have a disarm sequence)
+		if(sstate.arm_state == DISARMED) servos_arm();
 	}
 
 

@@ -56,7 +56,39 @@ typedef struct setpoint_t{
 	///< @}
 } setpoint_t;
 
+/**
+ * This structure contains flight statuses.
+ */
+typedef enum flight_status_t {
+	WAIT,
+	STANDBY,
+	MOTOR_IGNITION,
+	POWERED_ASCENT,
+	MECO,
+	UNPOWERED_ASCENT,
+	APOGEE,
+	DESCENT,
+	TOUCHDOWN
+} flight_status_t;
+
+/*
+This structure contains everything related to
+flight statuses and events
+*/
+typedef struct events_t {
+	uint64_t init_time;
+	uint64_t delay;
+	double ground_alt;
+	double appogee_alt;
+	double burnout_alt;
+	double ignition_alt;
+	int ignition_fl;	//1 if ignition was detected
+	int burnout_fl;	//1 if burnout was detected
+}events_t;
+
 extern setpoint_t setpoint;
+extern flight_status_t flight_status;
+extern events_t events;
 
 /**
  * @brief      Initializes the setpoint manager.

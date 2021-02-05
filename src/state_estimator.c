@@ -25,8 +25,6 @@
 #define TWO_PI (M_PI*2.0)
 
 state_estimate_t state_estimate; // extern variable in state_estimator.h
-flight_status_t flight_status;
-events_t events;
 
 // sensor data structs
 rc_mpu_data_t mpu_data;
@@ -565,7 +563,6 @@ static void __mocap_check_timeout(void)
 
 int state_estimator_init(void)
 {
-	flight_status = WAIT;
 	__batt_init();
 	if(__altitude_init()) return -1;
 	state_estimate.initialized = 1;
@@ -587,36 +584,6 @@ int state_estimator_march(void)
 	__altitude_march();
 	__feedback_select();
 	__mocap_check_timeout();
-
-	//Check flight status:
-	if (fstate.arm_state == DISARMED) 
-	{
-		flight_status = WAIT;
-	}
-	else 
-	{
-		if(flight_status == WAIT)
-		{
-			//This should happen if the system just got armed (on the launchpad)
-			//can record the starting altitude here if needed
-			events.ground_alt = state_estimate.alt_bmp;
-			
-			flight_status = STANDBY;
-		}
-		else if (flight_status == STANDBY) 
-		{
-			if (fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
-			{
-				events.init_time	= rc_nanos_since_boot();
-				events.ignition_alt = state_estimate.alt_bmp;
-				events.ignition_fl	= 1;
-				flight_status		= MOTOR_IGNITION;
-
-				
-			}
-		}
-	}
-
 
 	return 0;
 }

@@ -319,12 +319,38 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Initializing simple serial\n");
-	struct simple_serial_t teensy;
-	strcpy(teensy.port, "/dev/ttyACM0");
-	teensy.baud_rate = 115200;
-	if(simple_serial_init(&teensy)<0) {
-		FAIL("ERROR: failed to initialize simple_serial_init\n");
+	struct simple_serial_t serial_1;
+	struct simple_serial_t serial_2;
+	if (settings.enable_simple_serial)
+	{
+		if (settings.enable_serial_1)
+		{
+			printf("Initializing serial on port 1\n");
+			struct simple_serial_t serial_1;
+			strcpy(serial_1.port, settings.serial_port_1);
+			serial_1.baud_rate = settings.serial_port_1_baud;
+
+			printf("\n Serial port %c \n", settings.serial_port_1);
+			printf("\n Serial port %c \n", serial_1.port);
+			printf("\n Baud_rate %d \n", settings.serial_port_1_baud);
+			printf("\n Baud_rate %d \n", serial_1.baud_rate);
+			if (simple_serial_init(&serial_1) < 0) {
+				FAIL("ERROR: failed to initialize serial_port_1\n");
+			}
+		}
+		if (settings.enable_serial_2)
+		{
+			printf("Initializing serial on port 2\n");
+			
+			strcpy(serial_2.port, settings.serial_port_2);
+			serial_2.baud_rate = settings.serial_port_2_baud;
+			if (simple_serial_init(&serial_2) < 0) {
+				FAIL("ERROR: failed to initialize serial_port_2\n");
+			}
+		}
 	}
+		
+
 
 	// final setup
 	if(rc_make_pid_file()!=0){
@@ -369,7 +395,18 @@ int main(int argc, char *argv[])
 	printf_cleanup();
 	log_manager_cleanup();
 	rc_encoder_cleanup();
-	simple_serial_cleanup(&teensy);
+	if (settings.enable_simple_serial)
+	{
+		if (settings.enable_serial_1)
+		{
+			simple_serial_cleanup(&serial_1);
+		}
+		if (settings.enable_serial_2)
+		{
+			simple_serial_cleanup(&serial_2);
+		}
+	}
+	
 
 	// turn off red LED and blink green to say shut down was safe
 	rc_led_set(RC_LED_RED,0);

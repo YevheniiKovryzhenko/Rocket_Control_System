@@ -52,12 +52,20 @@ typedef struct settings_t{
 	double target_altitude_m;
 	double event_launch_accel;
 	double event_launch_dh;
+	double event_ignition_delay_s;
 	int enable_magnetometer; // we suggest leaving as 0 (mag OFF)
 	int enable_xbee;	//enable xbee serial link
 	int use_xbee_yaw;
 	int use_xbee_pitch;
 	int use_xbee_roll;
 	int enable_encoders;
+	int enable_simple_serial;
+	int enable_serial_1;
+	int enable_serial_2;
+	char serial_port_1[20];
+	char serial_port_2[20];
+	int serial_port_1_baud;
+	int serial_port_2_baud;
 	///@}
 
 	/** @name printf settings */
