@@ -9,7 +9,7 @@
 
 
 void* serial_read(void* ptr) {
-  int fd = (int *)ptr;
+  int fd = *((int *)ptr);
   unsigned char z = 'D';
 
   while (rc_get_state() != EXITING) {
