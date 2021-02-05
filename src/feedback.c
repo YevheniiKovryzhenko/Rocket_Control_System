@@ -154,6 +154,9 @@ int feedback_march(void)
 	double u[MAX_INPUTS], mot[MAX_ROTORS];
 	log_entry_t new_log;
 
+	// declare altitude control flag
+	static int last_en_X_ctrl = 0; //0 if alt.control was not running last time 
+
 	// Disarm if rc_state is somehow paused without disarming the controller.
 	// This shouldn't happen if other threads are working properly.
 	if (rc_get_state() != RUNNING && fstate.arm_state == ARMED) {
@@ -167,6 +170,12 @@ int feedback_march(void)
 		//activate attitude control
 	}
 	*/
+
+	// if not running or not armed, keep the motors in an idle state
+	if (rc_get_state() != RUNNING || fstate.arm_state == DISARMED) {
+		//don't do anything. Since motors are not armed, there is not power to the servo rail
+		return 0;
+	}
 	
 	// We are about to start marching the individual SISO controllers forward.
 	// Start by zeroing out the motors signals then add from there.
@@ -177,8 +186,21 @@ int feedback_march(void)
 	* Altitude Controller
 	* run only if enabled
 	***************************************************************************/
+	if (setpoint.en_X_ctrl == 0) last_en_X_ctrl = 0; //make sure the flag is off
+
 	if (setpoint.en_X_ctrl)
 	{
+		//Run only during the first cycle (the first time step after altitude controll is on)
+		if (last_en_X_ctrl == 0)
+		{
+
+			rc_filter_reset(&D_X);   // reset the filter and reads from json
+			
+			rc_filter_prefill_outputs(&D_X, 0);
+			last_en_X_ctrl = 1;
+		}
+
+
 		mix_check_saturation(VEC_X, mot, &min, &max);
 		if (max > MAX_X_COMPONENT)  max = MAX_X_COMPONENT;
 		if (min < -MAX_X_COMPONENT) min = -MAX_X_COMPONENT;
@@ -189,7 +211,7 @@ int feedback_march(void)
 		}
 		rc_filter_enable_saturation(&D_X, min, max);
 		D_X.gain = D_X_gain_orig * settings.v_nominal / state_estimate.v_batt_lp; //updating the gains based on battery voltage
-		u[VEC_X] = rc_filter_march(&D_X, setpoint.alt - state_estimate.proj_app); //this has to be the error between target and predicted value
+		u[VEC_X] = rc_filter_march(&D_X, (state_estimate.proj_app - setpoint.alt) / (settings.target_altitude_m)); //this has to be the error between target and predicted value
 		mix_add_input(u[VEC_X], VEC_X, mot);
 	}
 

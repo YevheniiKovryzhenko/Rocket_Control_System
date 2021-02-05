@@ -537,6 +537,8 @@ int settings_load_from_file(char* path)
 	#ifdef DEBUG
 		fprintf(stderr, "target_altitude_m: %f\n", settings.target_altitude_m);
 	#endif
+	PARSE_DOUBLE_MIN_MAX(event_launch_accel,0.0,1000.0)
+	PARSE_DOUBLE_MIN_MAX(event_launch_dh,0.0,1000.0)
 	PARSE_BOOL(enable_magnetometer)
 	PARSE_BOOL(enable_xbee)
 	PARSE_BOOL(use_xbee_yaw)

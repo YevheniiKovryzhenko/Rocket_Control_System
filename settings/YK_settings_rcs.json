@@ -8,6 +8,8 @@
 	"orientation": "ORIENTATION_X_UP",
 	"v_nominal": 7.4,
 	"target_altitude_m": 2000.0,
+	"event_launch_accel": 50.0,
+	"event_launch_dh": 0.5,
 
 	"enable_magnetometer": true,
 	"enable_xbee": false,
@@ -19,7 +21,7 @@
 
 	"printf_arm": true,
 	"printf_altitude": true,
-	"printf_proj_app":  true,
+	"printf_proj_app": true,
 	"printf_position": false,
 	"printf_rpy": true,
 	"printf_sticks": false,

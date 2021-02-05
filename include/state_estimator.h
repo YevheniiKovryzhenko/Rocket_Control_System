@@ -67,7 +67,7 @@ typedef struct state_estimate_t{
 	///@}
 
 	/** @name selected values for feedback
-	* these are copoies of other values in this state estimate used for feedback
+	* these are copies of other values in this state estimate used for feedback
 	* this is done so we can easily chose which source to get feedback from (mag or no mag)
 	*/
 	///@{
@@ -144,8 +144,40 @@ typedef struct state_estimate_t{
 
 }state_estimate_t;
 
+/**
+ * This structure contains flight statuses.
+ */
+ typedef enum flight_status_t {
+	WAIT,
+	STANDBY,
+	MOTOR_IGNITION,
+	POWERED_ASCENT,
+	MECO,
+	UNPOWERED_ASCENT,
+	APOGEE,
+	DESCENT,
+	TOUCHDOWN
+ } flight_status_t;
+
+ /*
+ This structure contains everything related to 
+ flight statuses and events
+ */
+ typedef struct events_t {
+	 uint64_t init_time;
+	 uint64_t delay;
+	 double ground_alt;
+	 double appogee_alt;
+	 double burnout_alt;
+	 double ignition_alt;
+	 int ignition_fl;	//1 if ignition was detected
+	 int burnout_fl;	//1 if burnout was detected
+ }events_t;
+
 extern state_estimate_t state_estimate;
 extern rc_mpu_data_t mpu_data;
+extern flight_status_t flight_status;
+extern events_t events;
 
 /**
  * @brief      Initial setup of the state estimator

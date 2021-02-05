@@ -21,7 +21,7 @@
 #include <rcs_defs.h>
 #include <flight_mode.h>
 
-#define XYZ_MAX_ERROR	10.0 ///< meters.
+#define XYZ_MAX_ERROR	700.0 ///< meters.
 
 setpoint_t setpoint; // extern variable in setpoint_manager.h
 
@@ -92,6 +92,7 @@ int setpoint_manager_update(void)
 	}
 
 	//for testing:
+	/*
 	if (__finddt_s(setpoint.init_time) > 10 && __finddt_s(setpoint.init_time) < 20)
 	{
 		user_input.requested_arm_mode = ARMED;
@@ -106,6 +107,7 @@ int setpoint_manager_update(void)
 	{
 		user_input.requested_arm_mode = DISARMED;
 	}
+	*/
 
 	// if PAUSED or UNINITIALIZED, do nothing
 	if(rc_get_state()!=RUNNING) return 0;
@@ -179,7 +181,7 @@ int setpoint_manager_update(void)
 	// arm feedback and servos when requested
 	if(user_input.requested_arm_mode == ARMED){
 		if(fstate.arm_state == DISARMED) feedback_arm();
-		if(sstate.arm_state == DISARMED) servos_arm();
+		if(sstate.arm_state == DISARMED) servos_arm(); //is this safe? (probably need to have a disarm sequence)
 	}
 
 

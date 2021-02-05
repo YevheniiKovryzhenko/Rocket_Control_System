@@ -50,6 +50,8 @@ typedef struct settings_t{
 	rc_mpu_orientation_t orientation;
 	double v_nominal;
 	double target_altitude_m;
+	double event_launch_accel;
+	double event_launch_dh;
 	int enable_magnetometer; // we suggest leaving as 0 (mag OFF)
 	int enable_xbee;	//enable xbee serial link
 	int use_xbee_yaw;
