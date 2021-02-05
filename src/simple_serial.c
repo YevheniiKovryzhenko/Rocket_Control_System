@@ -14,6 +14,7 @@ void* serial_read(void* ptr) {
 
   while (rc_get_state() != EXITING) {
     if (read(fd, &z, 1) > 0) {
+      // teensy_parser_parse(z); Use this as starting point LB :)
       printf("%c", z);
     }
   }
