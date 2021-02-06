@@ -11,6 +11,10 @@
 	"event_launch_accel": 50.0,
 	"event_launch_dh": 0.5,
 	"event_ignition_delay_s": 0.1,
+	"event_cutoff_delay_s": 0.2,
+	"event_appogee_delay_s": 0.5,
+	"event_landing_alt_tol": 5.0,
+	"event_landing_vel_tol": 1.0,
 
 	"enable_magnetometer": true,
 	"enable_xbee": false,

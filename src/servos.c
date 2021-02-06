@@ -94,6 +94,28 @@ int servos_arm(void)
     return 0;
 }
 
+int servos_return_to_nominal(void)
+{
+    if (sstate.initialized != 1)
+    {
+        printf("Servos have not been initialized \n");
+        return -1;
+    }
+
+    __set_motor_nom_pulse(); //do this every time to ensure nominal position
+
+    if (sstate.arm_state == DISARMED) {
+        //no need to proceed if already disarmed (no power to servo rail)
+        return 0;
+    }
+
+    //send servo signals using Pulse Width in microseconds
+    for (int i = 0; i < RC_SERVO_CH_MAX; i++) {
+        if (rc_servo_send_pulse_us(i, sstate.m_us[i]) == -1) return -1;
+    }
+    return 0;
+}
+
 int servos_disarm(void)
 {
     // need to set each of the servos to their nominal positions:

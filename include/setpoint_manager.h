@@ -62,13 +62,10 @@ typedef struct setpoint_t{
 typedef enum flight_status_t {
 	WAIT,
 	STANDBY,
-	MOTOR_IGNITION,
 	POWERED_ASCENT,
-	MECO,
 	UNPOWERED_ASCENT,
-	APOGEE,
-	DESCENT,
-	TOUCHDOWN
+	DESCENT_TO_LAND,
+	LANDED
 } flight_status_t;
 
 /*
@@ -77,13 +74,16 @@ flight statuses and events
 */
 typedef struct events_t {
 	uint64_t init_time;
-	uint64_t delay;
 	double ground_alt;
-	double appogee_alt;
-	double burnout_alt;
 	double ignition_alt;
+	double burnout_alt;
+	double appogee_alt;
+	double land_alt;
 	int ignition_fl;	//1 if ignition was detected
-	int burnout_fl;	//1 if burnout was detected
+	int burnout_fl;		//1 if burnout was detected
+	int meco_fl;		//1 if Main Engine Cutoff was detected
+	int appogee_fl;		//1 if appogee has been detected
+	int land_fl;
 }events_t;
 
 extern setpoint_t setpoint;

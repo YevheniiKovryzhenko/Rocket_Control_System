@@ -95,67 +95,189 @@ int setpoint_manager_init(void)
 int __flight_status_update(void)
 {
 	//Check flight status:
-	if (fstate.arm_state == DISARMED)
+	if (fstate.arm_state == DISARMED) //DISARMED and waiting for ARM command (servos are powered off)
 	{
 		flight_status = WAIT;
 		user_input.flight_mode = IDLE; //shoud never switch modes on its own while disarmed
-
+		return 0;
 	}
 	else //if armed - start checking for events
 	{
-		if (flight_status == WAIT)
+		if (flight_status == WAIT) //just got ARMED
 		{
-			//make sure evrything is armed and ready:
+			//make sure everything is armed and ready if arming was requested (should never really trigger this)
 			if (user_input.requested_arm_mode == ARMED) {
 				if (fstate.arm_state == DISARMED) feedback_arm();
 				if (sstate.arm_state == DISARMED) servos_arm();
 			}
 
 			//This should happen once the system just got armed (on the launchpad)
-			events.ground_alt = state_estimate.alt_bmp;
+			events.ground_alt	= state_estimate.alt_bmp;
+			events.appogee_alt	= state_estimate.alt_bmp; //initialize appogee alt
 
-			flight_status = STANDBY;
+			flight_status = STANDBY; //switch to the next flight status
+			return 0;
 		}
-		else if (flight_status == STANDBY)
+		else if (flight_status == STANDBY) //ARMED and waiting for IGNITION
 		{
-			if (fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
-			{
-				events.init_time = rc_nanos_since_boot();
-				events.ignition_alt = state_estimate.alt_bmp;
-				events.ignition_fl = 1;
-				events.init_time = rc_nanos_since_boot();
-				flight_status = MOTOR_IGNITION;
+			//always keep the highest altitude as appogee altitude (UNPOWERED_ASCENT has its own appogee detection scheme)
+			if (events.appogee_alt < state_estimate.alt_bmp && flight_status != UNPOWERED_ASCENT) events.appogee_alt = state_estimate.alt_bmp;
 
+			if (events.ignition_fl != 1 && fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
+			{
+				//Detected ignition
+				events.init_time	= rc_nanos_since_boot();
+				events.ignition_alt = state_estimate.alt_bmp;
+				events.ignition_fl	= 1; //sensors have shown high accel and change in alt (can be noise)
+
+				//flight_status = MOTOR_IGNITION; don't accept motor ignition just yet
+				return 0;
+			}
+			else if (events.ignition_fl && __finddt_s(events.init_time) >= settings.event_ignition_delay_s)
+			{
+				//check if we are still accelerating and height has changed since detetection
+				if (fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh && fabs(state_estimate.alt_bmp - events.ignition_alt) >= settings.event_launch_dh)
+				{
+					//accept the fact the motor is burning now
+					flight_status	= POWERED_ASCENT;
+					events.meco_fl	= 0; //just in case, reset the MECO flag
+					return 0;
+				}
+
+				return 0;
 			}
 			else
 			{
+				//no ignition has been detected yet
 				//reset flags if the ignition has not been confirmed
-				events.ignition_fl = 0;
-
-				flight_status = STANDBY;
+				events.ignition_fl	= 0;
+				flight_status		= STANDBY;
+				return 0;
 			}
 		}
-		else if (flight_status == MOTOR_IGNITION && __finddt_s(events.init_time) >= settings.event_ignition_delay_s && events.ignition_fl)
-		{
-			//accept the fact the motor is burning now
-			flight_status = POWERED_ASCENT;
-		}
-		else if (flight_status == POWERED_ASCENT)
+		else if (flight_status == POWERED_ASCENT) //motor is burning and we can't do anything about it
 		{
 			//need to detect motor burnout:
-			if (state_estimate.alt_bmp_vel <= 0.0 && state_estimate.alt_bmp_accel <= 0.0)
+			if (events.meco_fl != 1 && state_estimate.alt_bmp_vel >= 0.0 && state_estimate.alt_bmp_accel <= 0.0)
 			{
-				flight_status = UNPOWERED_ASCENT; //should we include a time delay here?
+				events.meco_fl = 1; //main engine cutoff detected
+				events.init_time = rc_nanos_since_boot();
+				return 0;
+			}
+			else if (events.ignition_fl && __finddt_s(events.init_time) >= settings.event_cutoff_delay_s && events.meco_fl && state_estimate.alt_bmp_vel >= 0.0 && state_estimate.alt_bmp_accel <= 0.0)
+			{
+				flight_status		= UNPOWERED_ASCENT; //should be safe to proceed now
+				events.appogee_fl	= 0;				//reset apogee flag just in case
+				return 0;
+			}
+			else
+			{
+				//reset flags if MECO has not been confirmed
+				flight_status	= POWERED_ASCENT;
+				events.meco_fl	= 0; //main engine cutoff not detected
+				return 0;
 			}
 		}
 		else if (flight_status = UNPOWERED_ASCENT)
 		{
 			//finally! here's when we can switch the flight mode to appogee control and do any active control
-			user_input.flight_mode = APP_CTRL;
-		}
-	}
+			user_input.flight_mode = APP_CTRL; //keep appogee control always active
 
-	return 0;
+			//we have to detect appogee:
+			//always keep the highest altitude as appogee altitude
+			if (events.appogee_fl != 1 && events.appogee_alt < state_estimate.alt_bmp) //check if altitude has increased for the first time
+			{
+				events.appogee_alt	= state_estimate.alt_bmp; //set appogee to the current alt
+				events.init_time	= rc_nanos_since_boot();
+				events.appogee_fl	= 1;
+				return 0;
+			}
+			else if (events.appogee_fl && events.appogee_alt < state_estimate.alt_bmp) //check if altitude has increased again
+			{
+				events.appogee_fl	= 0; //false alarm, reset flag
+				events.appogee_alt	= state_estimate.alt_bmp; //set appogee to the current alt
+				return 0;
+			}
+			else if (events.appogee_fl && __finddt_s(events.init_time) >= settings.event_appogee_delay_s)
+			{
+				if (events.appogee_alt > state_estimate.alt_bmp && state_estimate.alt_bmp_vel <= 0.0)
+				{
+					// this is an early trigger, which should work if velocity is estimated properly
+					flight_status	= DESCENT_TO_LAND;
+					//pre-set everything for DESCENT_TO_LAND
+					events.land_fl	= 0;
+					events.land_alt = state_estimate.alt_bmp; //we are at appogee, but still need to set this to the current alttitude
+					return 0;
+				}
+
+				if (events.appogee_alt > state_estimate.alt_bmp && __finddt_s(events.init_time) >= settings.event_appogee_delay_s * 10.0)
+				{
+					// this is a late failsafe to safeguard against velocity estimation failure
+					flight_status	= DESCENT_TO_LAND;
+					//pre-set everything for DESCENT_TO_LAND
+					events.land_fl	= 0;
+					events.land_alt = state_estimate.alt_bmp; //we are at appogee, but still need to set this to the current alttitude
+					return 0;
+				}
+
+				//none of the previous conditions have been trigered yet, just skip to the next run
+				return 0;
+			}
+			else
+			{
+				// appogee has not been detected - reset flag
+				events.appogee_fl = 0;
+				return 0;
+			}
+		}
+		else if (flight_status == DESCENT_TO_LAND)
+		{
+			//mission is almost over, we try to keep the system safe untill recovery
+			user_input.flight_mode = IDLE; //disable all controllers
+			servos_return_to_nominal();
+
+			// Should we deactivate servos after some time? - may prevent from ground damage... 
+			// TODO: We need to figure out a safe way to detect low altitude to deactivate servos 
+			// before we actually touch the ground
+
+			//check if landed already:
+			if (fabs(state_estimate.alt_bmp - events.land_alt) < settings.event_landing_alt_tol)
+			{
+				//quick check, assume velocity is estimated correctly
+				if (fabs(state_estimate.alt_bmp_vel) < settings.event_landing_vel_tol)
+				{
+					events.init_time	= rc_nanos_since_boot();
+					events.land_fl		= 1;
+				}
+			}
+			else
+			{
+				//if altitude changes more than the tolerance
+				if (events.land_alt < state_estimate.alt_bmp)
+				{
+					events.land_alt = state_estimate.alt_bmp;
+					events.land_fl	= 0;
+					return 0;
+				}
+
+				//what if not?
+
+			}
+			
+			//check is altitude has decreased:
+			
+
+
+
+		}
+		else
+		{
+			printf("ERROR in __flight_status_update, unknown flight status\n");
+			return -1;
+		}
+	
+	}
+	return -1; //something went wrong - we should never reach to this point
 }
 
 
@@ -173,7 +295,7 @@ int setpoint_manager_update(void)
 	}
 
 	if (__flight_status_update() != 0) {
-		fprintf(stderr, "ERROR in __flight_status_update.\n");
+		fprintf(stderr, "ERROR in __flight_status_update\n");
 		return -1;
 	}
 

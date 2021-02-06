@@ -80,6 +80,16 @@ int servos_disarm(void);
  */
 int servos_arm(void);
 
+/**
+ * @brief      This is how outside functions bring servos to nominal positions.
+ *
+ *	Keeps power to servo rail enabled (if disabled), makes sure servo motors 
+ *  are receiving only nominal comands.
+ *
+ * @return     0 on success, -1 on failure
+ */
+int servos_return_to_nominal(void);
+
 
 /**
  * @brief      Cleanup the servo motor function, freeing memory

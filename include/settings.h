@@ -53,6 +53,10 @@ typedef struct settings_t{
 	double event_launch_accel;
 	double event_launch_dh;
 	double event_ignition_delay_s;
+	double event_cutoff_delay_s;
+	double event_appogee_delay_s;
+	double event_landing_alt_tol;
+	double event_landing_vel_tol;
 	int enable_magnetometer; // we suggest leaving as 0 (mag OFF)
 	int enable_xbee;	//enable xbee serial link
 	int use_xbee_yaw;
