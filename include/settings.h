@@ -55,6 +55,9 @@ typedef struct settings_t{
 	double event_ignition_delay_s;
 	double event_cutoff_delay_s;
 	double event_appogee_delay_s;
+	double event_landing_delay_early_s;
+	double event_landing_delay_late_s;
+	double event_start_landing_alt_m;
 	double event_landing_alt_tol;
 	double event_landing_vel_tol;
 	int enable_magnetometer; // we suggest leaving as 0 (mag OFF)

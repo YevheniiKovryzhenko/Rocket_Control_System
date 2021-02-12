@@ -92,6 +92,15 @@ int setpoint_manager_init(void)
 *
 * returns> 0 if sucessfull -1 on failure
 */
+
+/*
+TODO:
+- verify all tolerances and logic
+- add logic for more advanced event detection:
+	- for separation
+	- pressure-based sensor failure analisys (cross-check chages in pressure to imu and gyro data test if the sensors are working) - may need to be implemented elsewhere
+	- restart failsafe - make sure the event logic can be easily restarted in case of failure (possibly in flight? make it safe to do so...)
+*/
 int __flight_status_update(void)
 {
 	//Check flight status:
@@ -157,6 +166,9 @@ int __flight_status_update(void)
 		}
 		else if (flight_status == POWERED_ASCENT) //motor is burning and we can't do anything about it
 		{
+			//always keep the highest altitude as appogee altitude (UNPOWERED_ASCENT has its own appogee detection scheme)
+			if (events.appogee_alt < state_estimate.alt_bmp && flight_status != UNPOWERED_ASCENT) events.appogee_alt = state_estimate.alt_bmp;
+
 			//need to detect motor burnout:
 			if (events.meco_fl != 1 && state_estimate.alt_bmp_vel >= 0.0 && state_estimate.alt_bmp_accel <= 0.0)
 			{
@@ -198,25 +210,31 @@ int __flight_status_update(void)
 				events.appogee_alt	= state_estimate.alt_bmp; //set appogee to the current alt
 				return 0;
 			}
-			else if (events.appogee_fl && __finddt_s(events.init_time) >= settings.event_appogee_delay_s)
+			else if (events.appogee_fl && __finddt_s(events.init_time) >= settings.event_appogee_delay_s) //if no increase in alt for a few milliseconds
 			{
 				if (events.appogee_alt > state_estimate.alt_bmp && state_estimate.alt_bmp_vel <= 0.0)
 				{
 					// this is an early trigger, which should work if velocity is estimated properly
 					flight_status	= DESCENT_TO_LAND;
 					//pre-set everything for DESCENT_TO_LAND
-					events.land_fl	= 0;
-					events.land_alt = state_estimate.alt_bmp; //we are at appogee, but still need to set this to the current alttitude
+					events.land_fl		= 0;
+					events.land_fl_vel	= 0;
+					
+					//events.land_alt = state_estimate.alt_bmp; //we have already passed appogee, so don't overwrite appogee altitude!
 					return 0;
 				}
+
+				//will only reach this line if velocity is not estimated properly
+				//wait more to confirm appogee based of altitude change
 
 				if (events.appogee_alt > state_estimate.alt_bmp && __finddt_s(events.init_time) >= settings.event_appogee_delay_s * 10.0)
 				{
 					// this is a late failsafe to safeguard against velocity estimation failure
 					flight_status	= DESCENT_TO_LAND;
 					//pre-set everything for DESCENT_TO_LAND
-					events.land_fl	= 0;
-					events.land_alt = state_estimate.alt_bmp; //we are at appogee, but still need to set this to the current alttitude
+					events.land_fl		= 0;
+					events.land_fl_vel	= 0;
+					events.land_alt		= state_estimate.alt_bmp; //we have already passed appogee for sure, so don't overwrite appogee altitude!
 					return 0;
 				}
 
@@ -239,36 +257,110 @@ int __flight_status_update(void)
 			// Should we deactivate servos after some time? - may prevent from ground damage... 
 			// TODO: We need to figure out a safe way to detect low altitude to deactivate servos 
 			// before we actually touch the ground
+			// ideally we would want to detect separations and deployments of the main before reaching 
+			// critically low altitude
+			if (state_estimate.alt_bmp < events.ground_alt + settings.event_start_landing_alt_m)
+			{
+				if (sstate.arm_state == ARMED) servos_disarm();
+			}
 
-			//check if landed already:
-			if (fabs(state_estimate.alt_bmp - events.land_alt) < settings.event_landing_alt_tol)
+
+
+			//landing detection is not critical, since the mission is over at this point
+			//we can remain in DESCENT_TO_LAND safely because controllers are in IDLE mode (no control)
+
+			// check if landed already, rocket on the ground would have close to zero change in altitude and very small velocity
+			// use tolerances to account for small drift and numeric/sensor noise
+			if (fabs(state_estimate.alt_bmp - events.land_alt) < settings.event_landing_alt_tol) //if on the ground, altitude won't change much
 			{
 				//quick check, assume velocity is estimated correctly
-				if (fabs(state_estimate.alt_bmp_vel) < settings.event_landing_vel_tol)
+				//note, landing under parachute is slow, below 30m/s, but will rarely be slower then 5 m/s (check with recovery)
+				if (events.land_fl_vel != 1 && fabs(state_estimate.alt_bmp_vel) < settings.event_landing_vel_tol) //velocity should be very close to zero
 				{
-					events.init_time	= rc_nanos_since_boot();
-					events.land_fl		= 1;
+					//this is the begining of the fast landing detection algorithm (based on both alt and velocity)
+					events.init_time	= rc_nanos_since_boot(); //record time
+					events.land_fl_vel	= 1; //may have landed - need to verify
+					return 0;
 				}
-			}
-			else
-			{
-				//if altitude changes more than the tolerance
-				if (events.land_alt < state_estimate.alt_bmp)
+				else if (events.land_fl_vel && fabs(state_estimate.alt_bmp_vel) < settings.event_landing_vel_tol)  //velocity should be very close to zero
 				{
-					events.land_alt = state_estimate.alt_bmp;
-					events.land_fl	= 0;
+					if (__finddt_s(events.init_time) >= settings.event_landing_delay_early_s) //confirm if enough time has passed (should be at least 5 seconds)
+					{
+						flight_status = LANDED;
+						return 0;
+					}
+					else
+					{
+						events.land_fl_vel = 1; //may have landed - need to verify (make sure this is still enabled)
+						return 0;
+					}
+				}
+				else if (events.land_fl != 1)
+				{
+					//we need to safeguard against velocity estimation failure if the altitude has not changed for a while (altitude does not drift)
+					//this is the begining of the slow landing detection algorithm (only based of the alt)
+					//the algorithm will only reach this line if:
+					// - altitude change is within tolerance (small, not moving vertically to much) 
+					// - velocity estimation went haywire and it totally off (very large in magnitude, can not come back to zero)
+					events.init_time_landed = rc_nanos_since_boot(); //record time
+					events.land_fl			= 1;
+					return 0;
+				}
+				else if (events.land_fl)
+				{
+					if (__finddt_s(events.init_time_landed) >= settings.event_landing_delay_late_s) //confirm if enough time has passed (should be at least 20 seconds)
+					{
+						flight_status = LANDED;
+						return 0;
+					}
+					else
+					{
+						events.land_fl = 1; //may have landed - need to verify (make sure this is still enabled)
+						return 0;
+					}
+				}
+				else
+				{
+					//should never reach this line under normal conditions
+					events.land_fl		= 0;
+					events.land_fl_vel	= 0;
 					return 0;
 				}
 
-				//what if not?
+				
 
 			}
-			
-			//check is altitude has decreased:
-			
+			else //if altitude changes are more than the tolerance
+			{
+				if (events.land_alt < state_estimate.alt_bmp) //will normally happen when we are still descending
+				{
+					events.land_alt		= state_estimate.alt_bmp;
+					events.land_fl		= 0;
+					events.land_fl_vel	= 0;
+					return 0;
+				}
+				else //what if not?
+				{
+					//Houston we have a problem -- need a failsafe here
 
+					// will only reach here if altitude is not decreasing and previous conditions have not been triggered
+					// - may indicate too tight tolerances on the above conditions 
+					// - may have some logic error in the above statements
+					// - sensor failure (barometer, specifically) - kinda late to the party if this is the case
+					return 0;
+				}
 
+				
 
+			}
+
+		}
+		else if (flight_status == LANDED)
+		{
+			//don't do anything, make sure controllers are in iddle mode and servos are disarmed
+			user_input.flight_mode			= IDLE;
+			user_input.requested_arm_mode	= DISARMED; //should already be disarmed by this point, so just double check
+			return 0;
 		}
 		else
 		{

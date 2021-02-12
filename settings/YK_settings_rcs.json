@@ -13,6 +13,9 @@
 	"event_ignition_delay_s": 0.1,
 	"event_cutoff_delay_s": 0.2,
 	"event_appogee_delay_s": 0.5,
+	"event_landing_delay_early_s": 5.0,
+	"event_landing_delay_late_s": 20.0,
+	"event_start_landing_alt_m": 100.0,
 	"event_landing_alt_tol": 5.0,
 	"event_landing_vel_tol": 1.0,
 

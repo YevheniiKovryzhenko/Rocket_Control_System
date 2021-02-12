@@ -74,6 +74,7 @@ flight statuses and events
 */
 typedef struct events_t {
 	uint64_t init_time;
+	uint64_t init_time_landed;
 	double ground_alt;
 	double ignition_alt;
 	double burnout_alt;
@@ -83,7 +84,8 @@ typedef struct events_t {
 	int burnout_fl;		//1 if burnout was detected
 	int meco_fl;		//1 if Main Engine Cutoff was detected
 	int appogee_fl;		//1 if appogee has been detected
-	int land_fl;
+	int land_fl;		//1 if confirmed landning (slow, altitude based)
+	int land_fl_vel;	//1 if confirmed landning (fast, velocity and altitude based)
 }events_t;
 
 extern setpoint_t setpoint;
