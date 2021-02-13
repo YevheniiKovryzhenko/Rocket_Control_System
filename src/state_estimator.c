@@ -21,10 +21,12 @@
 #include <state_estimator.h>
 #include <settings.h>
 #include <xbee_packet_t.h>
+//#include <fallback_packet.h>
 
 #define TWO_PI (M_PI*2.0)
 
 state_estimate_t state_estimate; // extern variable in state_estimator.h
+//fallback_packet_t main_state; //extern in fallback_packet.h
 
 // sensor data structs
 rc_mpu_data_t mpu_data;
@@ -515,25 +517,49 @@ static void __feedback_select(void)
 
 	// If estimating state of the board and using xbee:
 	if (settings.enable_xbee) {
-		state_estimate.Z = xbeeMsg.z;
-		state_estimate.X = xbeeMsg.x;
-		state_estimate.Y = xbeeMsg.y;
+		state_estimate.X = state_estimate.pos_mocap[0];
+		state_estimate.Y = state_estimate.pos_mocap[1];
+		state_estimate.Z = state_estimate.pos_mocap[2];
 		
 		if (settings.use_xbee_roll) {
 			state_estimate.roll 	= state_estimate.tb_mocap[0];
 		}
 		if (settings.use_xbee_pitch) {
-			state_estimate.pitch 	= -state_estimate.tb_mocap[1];
+			state_estimate.pitch 	= state_estimate.tb_mocap[1];
 		}
 		if (settings.use_xbee_yaw) {
-			state_estimate.yaw 		= -state_estimate.tb_mocap[2];
+			state_estimate.yaw 		= state_estimate.tb_mocap[2];
 		}
 	}
 	else {
-		state_estimate.X = state_estimate.pos_mocap[0];
-		state_estimate.Y = state_estimate.pos_mocap[1];
-		state_estimate.Z = state_estimate.alt_bmp;
+
+		switch (settings.orientation)
+		{
+		case ORIENTATION_X_UP:
+			state_estimate.X = state_estimate.alt_bmp;
+			state_estimate.Y = state_estimate.pos_mocap[1];
+			state_estimate.Z = state_estimate.pos_mocap[2];
+			break;
+		case ORIENTATION_Z_DOWN:
+			state_estimate.X = state_estimate.pos_mocap[0];
+			state_estimate.Y = state_estimate.pos_mocap[1];
+			state_estimate.Z = -state_estimate.alt_bmp;
+			break;
+		default:
+			fprintf(stderr, "ERROR: Unknown Body Frame Orientation. Assuming ORIENTATION_X_UP. Please check settings.orientation\n");
+			state_estimate.X = state_estimate.alt_bmp;
+			state_estimate.Y = state_estimate.pos_mocap[1];
+			state_estimate.Z = state_estimate.pos_mocap[2];
+		}
+		
 	}
+	/*
+
+	main_state.alt			= state_estimate.alt_bmp;
+	main_state.alt_vel		= state_estimate.alt_bmp_vel;
+	main_state.alt_accel	= state_estimate.alt_bmp_accel;
+	main_state.
+	*/
 }
 
 static void __altitude_cleanup(void)

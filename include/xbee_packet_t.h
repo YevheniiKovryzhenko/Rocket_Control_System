@@ -1,3 +1,6 @@
+#ifndef XBEE_PACKET_H
+#define XBEE_PACKET_H
+
 // XBee Packet
 typedef struct xbee_packet_t
 {
@@ -22,3 +25,5 @@ extern int xbee_portID;
 int XBEE_init();
 int XBEE_getData();
 void XBEE_printData();
+
+#endif //XBEE_PACKET_H

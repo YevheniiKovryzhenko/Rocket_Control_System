@@ -17,10 +17,11 @@
  * what it is receiving.
  */
 typedef struct user_input_t{
-	int initialized; 				///< set to 1 after input_manager_init(void)
-	flight_mode_t flight_mode;		///< this is the user commanded flight_mode.
-	int input_active;				///< nonzero indicates some user control is coming in
-	arm_state_t requested_arm_mode;	///< set to ARMED after arming sequence is entered.
+	int initialized; 					///< set to 1 after input_manager_init(void)
+	flight_mode_t flight_mode;			///< this is the user commanded flight_mode.
+	int input_active;					///< nonzero indicates some user control is coming in
+	arm_state_t requested_arm_mode;		///< set to ARMED after arming sequence is entered.
+	int use_external_state_estimation;	///< 1 if we want to use externally computed values 
 } user_input_t;
 
 extern user_input_t user_input;
@@ -34,6 +35,15 @@ extern user_input_t user_input;
  * @return     0 on success, -1 on failure
  */
 int input_manager_init(void);
+
+/**
+ * @brief      Picks source of state estimation.
+ *
+ *             
+ *
+ * @return     0 on success, -1 on failure
+ */
+int pick_data_source(void);
 
 /**
  * @brief      Waits for the input manager thread to exit
