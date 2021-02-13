@@ -515,7 +515,7 @@ static void __feedback_select(void)
 	state_estimate.continuous_yaw	= state_estimate.imu_continuous_yaw;
 	state_estimate.continuous_roll	= state_estimate.imu_continuous_roll;
 
-	// If estimating state of the board and using xbee:
+	// If estimating state of the board and using xbee: or other external sources
 	if (settings.enable_xbee) {
 		state_estimate.X = state_estimate.pos_mocap[0];
 		state_estimate.Y = state_estimate.pos_mocap[1];
@@ -553,13 +553,12 @@ static void __feedback_select(void)
 		}
 		
 	}
-	/*
 
-	main_state.alt			= state_estimate.alt_bmp;
-	main_state.alt_vel		= state_estimate.alt_bmp_vel;
-	main_state.alt_accel	= state_estimate.alt_bmp_accel;
-	main_state.
-	*/
+	if (settings.enable_simple_serial)
+	{
+		if(pick_data_source() != 1) fprintf(stderr,"ERROR: something went wrong in pick_data_source. Failed to overwrite with external input\n");
+	}
+
 }
 
 static void __altitude_cleanup(void)
