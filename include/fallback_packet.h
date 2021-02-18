@@ -33,6 +33,16 @@ typedef struct fallback_packet_t
    
 } fallback_packet_t;
 
+#define NUM_FRAMING_BYTES_SERIAL 4                 // 2 START bytes + 2 Fletcher-16 checksum bytes
+#define SERIAL_DATA_LENGTH            sizeof(fallback_packet_t)      // Actual Packet Being Sent
+#define SERIAL_PACKET_LENGTH	    SERIAL_DATA_LENGTH + NUM_FRAMING_BYTES_SERIAL
+
+extern fallback_packet_t serialMsg;
+extern int serial_portID;
+
+int serial_init();
+int serial_getData();
+
 extern fallback_packet_t fallback;
 
 #endif //FALLBACK

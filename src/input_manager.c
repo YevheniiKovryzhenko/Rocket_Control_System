@@ -29,11 +29,12 @@ int pick_data_source()
 		fprintf(stderr, "ERROR in pick_data_source, input mannager was never initialized\n");
 		return -1;
 	}
-
+	fallback = serialMsg;
 
 	//always check these for external input: 
 	user_input.use_external_state_estimation = fallback.use_external_state_estimation;
-
+	
+	user_input.requested_arm_mode = fallback.armed_state;
 	if (user_input.use_external_state_estimation) //choose transmitted values, computed externally
 	{
 		//assume a single source of information for now

@@ -29,6 +29,7 @@
 #include <log_manager.h>
 #include <printf_manager.h>
 #include <xbee_packet_t.h>
+#include <fallback_packet.h>
 #include <rc/encoder.h>
 #include <signal.h>
 
@@ -107,6 +108,11 @@ static void __imu_isr(void)
 	state_estimator_march();
 	if(settings.enable_xbee){
 		XBEE_getData();
+	}
+
+	if (settings.enable_simple_serial)
+	{
+		serial_getData();
 	}
 	feedback_march();
 	
@@ -323,6 +329,10 @@ int main(int argc, char *argv[])
 	struct simple_serial_t serial_2;
 	if (settings.enable_simple_serial)
 	{
+		if (serial_init() < 0) {
+			FAIL("ERROR: failed to init serial link")
+		}
+		
 		if (settings.enable_serial_1)
 		{
 			printf("Initializing serial on port 1\n");

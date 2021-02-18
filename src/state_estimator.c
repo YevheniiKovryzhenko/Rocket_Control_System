@@ -556,7 +556,7 @@ static void __feedback_select(void)
 
 	if (settings.enable_simple_serial)
 	{
-		if(pick_data_source() != 1) fprintf(stderr,"ERROR: something went wrong in pick_data_source. Failed to overwrite with external input\n");
+		if(pick_data_source() != 0) fprintf(stderr,"ERROR: something went wrong in pick_data_source. Failed to overwrite with external input\n");
 	}
 
 }
