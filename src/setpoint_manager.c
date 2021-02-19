@@ -103,11 +103,28 @@ TODO:
 */
 int __flight_status_update(void)
 {
+	//Check for tipover:
+	if (events.tipover_detected)
+	{
+		//printf("TIPOVER DETECTED \n");
+		user_input.flight_mode = IDLE; //disable controllers
+		servos_return_to_nominal(); //return servos to nominal
+	}
+
+	if (flight_status == TEST)
+	{
+		//printf("Going into testing... \n");
+		user_input.flight_mode = YP_TEST;
+		return 0;
+	}
+
+
 	//Check flight status:
 	if (fstate.arm_state == DISARMED) //DISARMED and waiting for ARM command (servos are powered off)
 	{
-		flight_status = WAIT;
-		user_input.flight_mode = IDLE; //shoud never switch modes on its own while disarmed
+		events.ground_alt		= 0;
+		flight_status			= WAIT;
+		user_input.flight_mode	= IDLE; //shoud never switch modes on its own while disarmed
 		return 0;
 	}
 	else //if armed - start checking for events
@@ -193,7 +210,10 @@ int __flight_status_update(void)
 		else if (flight_status = UNPOWERED_ASCENT)
 		{
 			//finally! here's when we can switch the flight mode to appogee control and do any active control
-			user_input.flight_mode = APP_CTRL; //keep appogee control always active
+			if (events.tipover_detected != 1)
+			{
+				user_input.flight_mode = APP_CTRL; //keep appogee control always active
+			}
 
 			//we have to detect appogee:
 			//always keep the highest altitude as appogee altitude
@@ -400,7 +420,8 @@ int setpoint_manager_update(void)
 	if (__finddt_s(setpoint.init_time) > 20 && __finddt_s(setpoint.init_time) < 60)
 	{
 		//user_input.requested_arm_mode = DISARMED;
-		user_input.flight_mode = YP_TEST;
+		//user_input.flight_mode = YP_TEST;
+		flight_status = TEST;
 	}
 	
 	if (__finddt_s(setpoint.init_time) > 60)

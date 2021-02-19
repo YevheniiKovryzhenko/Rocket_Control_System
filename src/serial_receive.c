@@ -34,7 +34,7 @@ int ring_overflow=0, rdIndex=0, wrIndex=0;
 unsigned char ringbuffer[RING_BUFSIZE];
 
 int serial_init() {
-  int baudRate = 230400;  
+  int baudRate = 1000000;  
   serial_portID = serial_open("/dev/ttyS1",baudRate,0); // Nonblocking = 0, BLOCKING = 1 
   if(serial_portID == -1)    {
     printf("Failed to open Serial Port\n");
@@ -91,8 +91,8 @@ void readRingBuffer()
     // Case 0:  Current character is first message header byte
     if((ringbuffer[rdIndex] == startByte1) && !msgState) {
 	    //printf("\n Received Start byte!\n"); //test if xbee is working and receiving start byte
-      msgState = 1; 
-      msglength = 0;
+        msgState = 1; 
+        msglength = 0;
     }
      
     // Case 1:  Current character is second message header byte
@@ -129,7 +129,7 @@ void readRingBuffer()
         { // Valid message -- copy and print --- must figure out the checksum later (JK)
 
             double dt_s = (rc_nanos_since_boot() - last_time) / (1e9); //calculate time since last successful reading
-            if (1 / dt_s < 20) printf("\nWARNING, Low update frequency of Xbee %f (Hz)\n", 1 / dt_s); //check the update frequency
+            if (1 / dt_s < 5) printf("\nWARNING, Low update frequency of Serial %f (Hz)\n", 1 / dt_s); //check the update frequency
             memcpy(&serialMsg, msgdata, SERIAL_DATA_LENGTH);
 
             last_time = rc_nanos_since_boot();

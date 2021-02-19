@@ -33,6 +33,10 @@ int pick_data_source()
 
 	//always check these for external input: 
 	user_input.use_external_state_estimation = fallback.use_external_state_estimation;
+
+	//flight_status = fallback.flight_state;
+	if (fallback.flight_state == TEST) flight_status = fallback.flight_state; //get the flightstate
+	if (fallback.flight_state == STANDBY) flight_status = fallback.flight_state;
 	
 	user_input.requested_arm_mode = fallback.armed_state;
 	if (user_input.use_external_state_estimation) //choose transmitted values, computed externally
@@ -42,12 +46,13 @@ int pick_data_source()
 		//owerwrite the estimated state on the board with the external data:
 		state_estimate.alt_bmp			= fallback.alt; //get the altitude
 		state_estimate.alt_bmp_vel		= fallback.alt_vel; //get vertial velocity
+		state_estimate.proj_app			= fallback.proj_app;
 		state_estimate.alt_bmp_accel	= fallback.alt_accel; //get vertical accel
 		state_estimate.roll				= fallback.roll;
 		state_estimate.pitch			= fallback.pitch;
 		state_estimate.yaw				= fallback.yaw;
 		
-		flight_status = fallback.flight_state; //get the flightstate
+		
 
 		return 0;
 	}

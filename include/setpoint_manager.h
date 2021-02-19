@@ -65,7 +65,8 @@ typedef enum flight_status_t {
 	POWERED_ASCENT,
 	UNPOWERED_ASCENT,
 	DESCENT_TO_LAND,
-	LANDED
+	LANDED,
+	TEST
 } flight_status_t;
 
 /*
@@ -86,6 +87,7 @@ typedef struct events_t {
 	int appogee_fl;		//1 if appogee has been detected
 	int land_fl;		//1 if confirmed landning (slow, altitude based)
 	int land_fl_vel;	//1 if confirmed landning (fast, velocity and altitude based)
+	int tipover_detected;
 }events_t;
 
 extern setpoint_t setpoint;

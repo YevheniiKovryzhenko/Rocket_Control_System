@@ -126,9 +126,11 @@ static void __imu_isr(void)
 	state_estimator_jobs_after_feedback();
 	
 	//delete this later
+	/*
 	double dt_s = (rc_nanos_since_boot()-temp_time)/(1e9); //calculate time since last successful reading
 	if (1/dt_s < 90) printf("\nWARNING, Low update frequency of __imu_isr %f (Hz)\n",1/dt_s); //check the update frequency
 	temp_time = rc_nanos_since_boot();
+	*/
 }
 
 

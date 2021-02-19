@@ -164,12 +164,16 @@ int feedback_march(void)
 		printf("\n rc_state is somehow paused \n");
 	}
 
-	/* Can be used later to activate attitude control
+	// Can be used later to activate attitude control
 	// check for attitude deviation:
 	if (fabs(state_estimate.yaw) > TIP_ANGLE || fabs(state_estimate.pitch) > TIP_ANGLE) {
-		//activate attitude control
+		events.tipover_detected = 1;
 	}
-	*/
+	else
+	{
+		events.tipover_detected = 0;
+	}
+	
 
 	// if not running or not armed, keep the motors in an idle state
 	if (rc_get_state() != RUNNING || fstate.arm_state == DISARMED) {

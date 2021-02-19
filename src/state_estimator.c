@@ -21,6 +21,7 @@
 #include <state_estimator.h>
 #include <settings.h>
 #include <xbee_packet_t.h>
+#include <setpoint_manager.h>
 //#include <fallback_packet.h>
 
 #define TWO_PI (M_PI*2.0)
@@ -44,7 +45,7 @@ static void __projected_altitude(void) {
 	state_estimate.proj_app = fabs(state_estimate.alt_bmp_vel * 
 		state_estimate.alt_bmp_vel) / 
 		(2.0 * (-state_estimate.alt_bmp_accel)) * 
-		log(fabs((state_estimate.alt_bmp_accel + GRAVITY) / GRAVITY)) +
+		log(fabs((state_estimate.alt_bmp_accel - GRAVITY) / GRAVITY)) +
 		state_estimate.alt_bmp;
 
 	//printf("\n First: %f", state_estimate.alt_bmp_accel / GRAVITY);
@@ -498,7 +499,7 @@ static void __altitude_march(void)
 	rc_kalman_update_lin(&alt_kf, u, y);
 
 	// altitude estimate
-	state_estimate.alt_bmp		= alt_kf.x_est.d[0];
+	state_estimate.alt_bmp		= alt_kf.x_est.d[0] - events.ground_alt;
 	state_estimate.alt_bmp_vel	= alt_kf.x_est.d[1];
 	//state_estimate.alt_bmp_accel= alt_kf.x_est.d[2]; //does not work rn (very slow updates)
 	state_estimate.alt_bmp_accel = acc_lp.newest_output; //quick, slightly filtered data

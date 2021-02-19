@@ -55,10 +55,11 @@ typedef enum arm_state_t {
 #define MAX_YAW_COMPONENT	1.0
 
 #define MAX_X_COMPONENT		1.0
+#define TIP_ANGLE			0.8
 
  // Files
-#define LOG_DIR		"/home/debian/rcs_logs/"
-
+//#define LOG_DIR		"/home/debian/rcs_logs/"
+#define LOG_DIR		"/mnt/SD/rcs_logs/"
 
 // terminal emulator control sequences
 #define WRAP_DISABLE	"\033[?7l"
