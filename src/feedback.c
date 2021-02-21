@@ -164,10 +164,25 @@ int feedback_march(void)
 		printf("\n rc_state is somehow paused \n");
 	}
 
-	// Can be used later to activate attitude control
+	// Very important for safety! We need to check the deflection from vertical flight
+	/*
+	Note: this can be used later to activate attitude control.
+
+	Ideal attitude correction sequence:
+	1 - record the attitude (pitch and yaw) at the launch rail - this is our "true" flight path
+	2 - record the attitude after burnout - this + some small tolerance is our limit on attitude deviation (don't go beyod this value pitch, yaw)
+	3 - always check for tipover angle, make sure the ACS is not making the rocket go sideways (if one of the servos/fins breakoff)
+		3.1 if error in yaw or pitch is too big - assume something went wrong in control (possible servo failure, fin breaking off)
+			- disable control on a specific axis. if too much yaw - disable controllers along z/yaw axis
+			don't kill power to servo rail, send pulse "return to nominal position" to servos. This will minimize asymetric drag that caused too much pitch/yaw
+		3.2 if error in yaw and pitch is too big - assume something went wrong in control
+			- same as for pitch/yaw error. Just use the same algotirhm for both channels 
+	*/
 	// check for attitude deviation:
 	if (fabs(state_estimate.yaw) > TIP_ANGLE || fabs(state_estimate.pitch) > TIP_ANGLE) {
 		events.tipover_detected = 1;
+		//currenty this disables all control if there is too much yaw or pitch (rotation about y and z if x is in the direction of the nosecone)
+		//check setpoint_mannager for cutoff sequence
 	}
 	else
 	{
@@ -255,7 +270,7 @@ int feedback_march(void)
 		}
 		rc_filter_enable_saturation(&D_pitch, min, max);
 		D_pitch.gain = D_pitch_gain_orig * settings.v_nominal / state_estimate.v_batt_lp;
-		u[VEC_PITCH] = rc_filter_march(&D_pitch, setpoint.pitch - state_estimate.pitch); //full PID control
+		u[VEC_PITCH] = rc_filter_march(&D_pitch, -(setpoint.pitch - state_estimate.pitch)); //full PID control
 		//u[VEC_PITCH] = (setpoint.pitch - state_estimate.pitch) * 2.0; //test using just a P controller
 		mix_add_input(u[VEC_PITCH], VEC_PITCH, mot);
 		
@@ -273,7 +288,7 @@ int feedback_march(void)
 		}
 		rc_filter_enable_saturation(&D_yaw, min, max);
 		D_yaw.gain = D_yaw_gain_orig * settings.v_nominal / state_estimate.v_batt_lp;
-		u[VEC_YAW] = rc_filter_march(&D_yaw, setpoint.yaw - state_estimate.yaw);
+		u[VEC_YAW] = rc_filter_march(&D_yaw, -(setpoint.yaw - state_estimate.yaw));
 		mix_add_input(u[VEC_YAW], VEC_YAW, mot);
 
 		//printf("\n mot[0] = %f, mot[1] = %f, mot[2] = %f, mot[3] = %f \n", mot[0], mot[1], mot[2], mot[3]);

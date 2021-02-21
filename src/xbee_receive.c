@@ -78,7 +78,7 @@ int XBEE_getData()
 #define XBEE_startByte1 0x81
 #define XBEE_startByte2 0xA1
 
-uint64_t last_time;
+//uint64_t last_time;
 
 void XBEE_readRingBuffer()
 {
@@ -124,11 +124,11 @@ void XBEE_readRingBuffer()
       msgState = 0;  // Done reading message data
       //if (ck1 == XBEE_ringbuffer[XBEE_rdIndex]) { // Valid message -- copy and print --- must figure out the checksum later (JK)
 	
-	double dt_s = (rc_nanos_since_boot()-last_time)/(1e9); //calculate time since last successful reading
-	if (1/dt_s < 20) printf("\nWARNING, Low update frequency of Xbee %f (Hz)\n",1/dt_s); //check the update frequency
+	//double dt_s = (rc_nanos_since_boot()-last_time)/(1e9); //calculate time since last successful reading
+	//if (1/dt_s < 20) printf("\nWARNING, Low update frequency of Xbee %f (Hz)\n",1/dt_s); //check the update frequency
   	memcpy(&xbeeMsg, msgdata, OPTI_DATA_LENGTH);
 	
-	last_time = rc_nanos_since_boot();
+	//last_time = rc_nanos_since_boot();
 	
 		//check for xbee connection (move it out later)
 	if(xbeeMsg.trackingValid == 0){

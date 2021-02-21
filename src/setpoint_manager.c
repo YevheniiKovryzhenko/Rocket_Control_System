@@ -422,8 +422,8 @@ int setpoint_manager_update(void)
 	if (__finddt_s(setpoint.init_time) > 20 && __finddt_s(setpoint.init_time) < 60)
 	{
 		//user_input.requested_arm_mode = ARMED;
-		//user_input.flight_mode = YP_TEST;
-		user_input.flight_mode = APP_CTRL;
+		user_input.flight_mode = YP_TEST;
+		//user_input.flight_mode = APP_CTRL;
 		//flight_status = TEST;
 	}
 	

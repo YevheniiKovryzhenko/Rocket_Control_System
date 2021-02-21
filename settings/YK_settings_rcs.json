@@ -26,7 +26,7 @@
 	"use_xbee_roll": false,
 	"enable_lidar": false,
 	"enable_encoders": false,
-	"enable_simple_serial": true,
+	"enable_simple_serial": false,
 	"enable_serial_1": false,
 	"serial_port_1": "/dev/ttyACM0",
 	"serial_port_1_baud": 112500,
@@ -49,7 +49,7 @@
 	"printf_rev": false,
 	"printf_counter": false,
 
-	"enable_logging": true,
+	"enable_logging": false,
 	"log_sensors": true,
 	"log_state": true,
 	"log_setpoint": true,
