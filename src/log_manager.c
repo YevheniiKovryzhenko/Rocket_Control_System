@@ -59,7 +59,7 @@ static int __write_header(FILE* fd)
 	}
 
 	if(settings.log_sensors){
-		fprintf(fd, ",v_batt,alt_bmp_raw,alt_bmp,alt_bmp_vel,alt_bmp_accel,gyro_roll,gyro_pitch,gyro_yaw,accel_X,accel_Y,accel_Z");
+		fprintf(fd, ",v_batt,bmp_pressure_raw,alt_bmp_raw,alt_bmp,alt_bmp_vel,alt_bmp_accel,gyro_roll,gyro_pitch,gyro_yaw,accel_X,accel_Y,accel_Z");
 	}
 
 	if(settings.log_state){

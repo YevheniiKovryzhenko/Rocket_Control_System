@@ -155,7 +155,7 @@ int feedback_march(void)
 	log_entry_t new_log;
 
 	// declare altitude control flag
-	static int last_en_X_ctrl = 0; //0 if alt.control was not running last time 
+	static int last_en_alt_ctrl = 0; //0 if alt.control was not running last time 
 
 	// Disarm if rc_state is somehow paused without disarming the controller.
 	// This shouldn't happen if other threads are working properly.
@@ -190,18 +190,18 @@ int feedback_march(void)
 	* Altitude Controller
 	* run only if enabled
 	***************************************************************************/
-	if (setpoint.en_X_ctrl == 0) last_en_X_ctrl = 0; //make sure the flag is off
+	if (setpoint.en_alt_ctrl == 0) last_en_alt_ctrl = 0; //make sure the flag is off
 
-	if (setpoint.en_X_ctrl)
+	if (setpoint.en_alt_ctrl)
 	{
 		//Run only during the first cycle (the first time step after altitude controll is on)
-		if (last_en_X_ctrl == 0)
+		if (last_en_alt_ctrl == 0)
 		{
 
 			rc_filter_reset(&D_X);   // reset the filter and reads from json
 			
 			rc_filter_prefill_outputs(&D_X, 0);
-			last_en_X_ctrl = 1;
+			last_en_alt_ctrl = 1;
 		}
 
 
@@ -215,7 +215,8 @@ int feedback_march(void)
 		}
 		rc_filter_enable_saturation(&D_X, min, max);
 		D_X.gain = D_X_gain_orig * settings.v_nominal / state_estimate.v_batt_lp; //updating the gains based on battery voltage
-		u[VEC_X] = rc_filter_march(&D_X, (state_estimate.proj_app - setpoint.alt) / (settings.target_altitude_m)); //this has to be the error between target and predicted value
+		//u[VEC_X] = rc_filter_march(&D_X, -50.0);
+		u[VEC_X] = rc_filter_march(&D_X, (settings.target_altitude_m - setpoint.alt)); //this has to be the error between target and predicted value
 		mix_add_input(u[VEC_X], VEC_X, mot);
 	}
 

@@ -53,10 +53,11 @@ void __update_app(void)
 
 	// make sure setpoint doesn't go too far to avoid controllers going crazy
 	if (state_estimate.proj_app > (settings.target_altitude_m + XYZ_MAX_ERROR)) {
-		setpoint.alt = state_estimate.proj_app + XYZ_MAX_ERROR;//if above target altitude
+		setpoint.alt = settings.target_altitude_m + XYZ_MAX_ERROR;//if above target altitude
+		return;
 	}
 	else if (state_estimate.proj_app < (settings.target_altitude_m - XYZ_MAX_ERROR)) {
-		setpoint.alt = state_estimate.proj_app - XYZ_MAX_ERROR; //if below target altitude
+		setpoint.alt = settings.target_altitude_m - XYZ_MAX_ERROR; //if below target altitude
 		return;
 	}
 	else {
@@ -111,13 +112,6 @@ int __flight_status_update(void)
 		servos_return_to_nominal(); //return servos to nominal
 	}
 
-	if (flight_status == TEST)
-	{
-		//printf("Going into testing... \n");
-		user_input.flight_mode = YP_TEST;
-		return 0;
-	}
-
 
 	//Check flight status:
 	if (fstate.arm_state == DISARMED) //DISARMED and waiting for ARM command (servos are powered off)
@@ -165,7 +159,7 @@ int __flight_status_update(void)
 				if (fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh && fabs(state_estimate.alt_bmp - events.ignition_alt) >= settings.event_launch_dh)
 				{
 					//accept the fact the motor is burning now
-					flight_status	= POWERED_ASCENT;
+					//flight_status	= POWERED_ASCENT;
 					events.meco_fl	= 0; //just in case, reset the MECO flag
 					return 0;
 				}
@@ -177,7 +171,7 @@ int __flight_status_update(void)
 				//no ignition has been detected yet
 				//reset flags if the ignition has not been confirmed
 				events.ignition_fl	= 0;
-				flight_status		= STANDBY;
+				//flight_status		= STANDBY;
 				return 0;
 			}
 		}
@@ -195,19 +189,19 @@ int __flight_status_update(void)
 			}
 			else if (events.ignition_fl && __finddt_s(events.init_time) >= settings.event_cutoff_delay_s && events.meco_fl && state_estimate.alt_bmp_vel >= 0.0 && state_estimate.alt_bmp_accel <= 0.0)
 			{
-				flight_status		= UNPOWERED_ASCENT; //should be safe to proceed now
+				//flight_status		= UNPOWERED_ASCENT; //should be safe to proceed now
 				events.appogee_fl	= 0;				//reset apogee flag just in case
 				return 0;
 			}
 			else
 			{
 				//reset flags if MECO has not been confirmed
-				flight_status	= POWERED_ASCENT;
+				//flight_status	= POWERED_ASCENT;
 				events.meco_fl	= 0; //main engine cutoff not detected
 				return 0;
 			}
 		}
-		else if (flight_status = UNPOWERED_ASCENT)
+		else if (flight_status == UNPOWERED_ASCENT)
 		{
 			//finally! here's when we can switch the flight mode to appogee control and do any active control
 			if (events.tipover_detected != 1)
@@ -235,7 +229,7 @@ int __flight_status_update(void)
 				if (events.appogee_alt > state_estimate.alt_bmp && state_estimate.alt_bmp_vel <= 0.0)
 				{
 					// this is an early trigger, which should work if velocity is estimated properly
-					flight_status	= DESCENT_TO_LAND;
+					//flight_status	= DESCENT_TO_LAND;
 					//pre-set everything for DESCENT_TO_LAND
 					events.land_fl		= 0;
 					events.land_fl_vel	= 0;
@@ -250,7 +244,7 @@ int __flight_status_update(void)
 				if (events.appogee_alt > state_estimate.alt_bmp && __finddt_s(events.init_time) >= settings.event_appogee_delay_s * 10.0)
 				{
 					// this is a late failsafe to safeguard against velocity estimation failure
-					flight_status	= DESCENT_TO_LAND;
+					//flight_status	= DESCENT_TO_LAND;
 					//pre-set everything for DESCENT_TO_LAND
 					events.land_fl		= 0;
 					events.land_fl_vel	= 0;
@@ -306,7 +300,7 @@ int __flight_status_update(void)
 				{
 					if (__finddt_s(events.init_time) >= settings.event_landing_delay_early_s) //confirm if enough time has passed (should be at least 5 seconds)
 					{
-						flight_status = LANDED;
+						//flight_status = LANDED;
 						return 0;
 					}
 					else
@@ -330,7 +324,7 @@ int __flight_status_update(void)
 				{
 					if (__finddt_s(events.init_time_landed) >= settings.event_landing_delay_late_s) //confirm if enough time has passed (should be at least 20 seconds)
 					{
-						flight_status = LANDED;
+						//flight_status = LANDED;
 						return 0;
 					}
 					else
@@ -370,7 +364,7 @@ int __flight_status_update(void)
 					return 0;
 				}
 
-				
+				return 0;
 
 			}
 
@@ -384,6 +378,13 @@ int __flight_status_update(void)
 		}
 		else
 		{
+			if (flight_status == TEST)
+			{
+				//printf("Going into testing... \n");
+				user_input.flight_mode = YP_TEST;
+				return 0;
+			}
+
 			printf("ERROR in __flight_status_update, unknown flight status\n");
 			return -1;
 		}
@@ -406,6 +407,7 @@ int setpoint_manager_update(void)
 		return -1;
 	}
 
+
 	if (__flight_status_update() != 0) {
 		fprintf(stderr, "ERROR in __flight_status_update\n");
 		return -1;
@@ -419,9 +421,10 @@ int setpoint_manager_update(void)
 	}
 	if (__finddt_s(setpoint.init_time) > 20 && __finddt_s(setpoint.init_time) < 60)
 	{
-		//user_input.requested_arm_mode = DISARMED;
+		//user_input.requested_arm_mode = ARMED;
 		//user_input.flight_mode = YP_TEST;
-		flight_status = TEST;
+		user_input.flight_mode = APP_CTRL;
+		//flight_status = TEST;
 	}
 	
 	if (__finddt_s(setpoint.init_time) > 60)

@@ -98,6 +98,9 @@ static int __print_header()
 	if(settings.printf_mode){
 		printf("   MODE ");
 	}
+	if (settings.printf_status) {
+		printf("   FLIGHT STATUS ");
+	}
 	if(settings.printf_counter){
 		printf(" counter ");
 	}
@@ -208,6 +211,9 @@ static void* __printf_manager_func(__attribute__ ((unused)) void* ptr)
 		if(settings.printf_mode){
 			print_flight_mode(user_input.flight_mode);
 		}
+		if (settings.printf_status) {
+			print_flight_status(flight_status);
+		}
 		if(settings.printf_counter){
 			printf("%d ",state_estimate.counter);
 		}
@@ -254,7 +260,7 @@ int print_flight_mode(flight_mode_t mode){
 		printf("%sIDLE%s",KYEL,KNRM);
 		return 0;
 	case APP_CTRL:
-		printf("%APP_CTRL%s",KYEL,KNRM);
+		printf("%sAPP_CTRL%s",KCYN,KNRM);
 		return 0;
 	case YP_TEST:
 		printf("%YP_TEST%s",KCYN,KNRM);
@@ -264,6 +270,34 @@ int print_flight_mode(flight_mode_t mode){
 		return 0;
 	default:
 		fprintf(stderr,"ERROR in print_flight_mode, unknown flight mode\n");
+		return -1;
+	}
+}
+int print_flight_status(flight_status_t status) {
+	switch (status) {
+	case WAIT:
+		printf("%s| WAIT%s", KYEL, KNRM);
+		return 0;
+	case STANDBY:
+		printf("%s| STANDBY%s", KCYN, KNRM);
+		return 0;
+	case POWERED_ASCENT:
+		printf("%| POWERED_ASCENT%s", KCYN, KNRM);
+		return 0;
+	case UNPOWERED_ASCENT:
+		printf("%| UNPOWERED_ASCENT%s", KCYN, KNRM);
+		return 0;
+	case DESCENT_TO_LAND:
+		printf("%| DESCENT_TO_LAND%s", KCYN, KNRM);
+		return 0;
+	case LANDED:
+		printf("%| LANDED%s", KCYN, KNRM);
+		return 0;
+	case TEST:
+		printf("%| TEST%s", KCYN, KNRM);
+		return 0;
+	default:
+		fprintf(stderr, "ERROR in print_flight_mode, unknown flight mode\n");
 		return -1;
 	}
 }

@@ -19,17 +19,17 @@
 */
 typedef struct fallback_packet_t
 {
-    uint32_t time;						///< Unique id or time for synchronizing transmition
+    //uint32_t time;						///< Unique id or time for synchronizing transmition
 	arm_state_t armed_state;			///< Use this channel to send ARMED or DISARMED command
 	int use_external_state_estimation;	///< Use data computed externally (1)
 	flight_status_t flight_state;	///< Use this channel to send current flight status
-	double roll;					///< Rotation about x of the body 
-	double pitch;					///< Rotation about y of the body 
-	double yaw;						///< Rotation about z of the body 
-	double proj_app;				///< estimated projected appogee the vehicle will reach given current flight condition
-	double alt;						///< altitude estimate
-	double alt_vel;					///< vertical velocity estimate 
-	double alt_accel;				///< vertical accel estimate 
+	//double roll;					///< Rotation about x of the body 
+	//double pitch;					///< Rotation about y of the body 
+	//double yaw;						///< Rotation about z of the body 
+	//double proj_app;				///< estimated projected appogee the vehicle will reach given current flight condition
+	//double alt;						///< altitude estimate
+	//double alt_vel;					///< vertical velocity estimate 
+	//double alt_accel;				///< vertical accel estimate 
    
 } fallback_packet_t;
 

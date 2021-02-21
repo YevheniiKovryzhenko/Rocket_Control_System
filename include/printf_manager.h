@@ -10,6 +10,7 @@
 #define PRINTF_MANAGER_H
 
 #include <flight_mode.h>
+#include <setpoint_manager.h>
 
 /**
  * @brief      Start the printf_manager thread which should be the only thing
@@ -37,6 +38,16 @@ int printf_cleanup(void);
  * @return     0 on success or -1 on error
  */
 int print_flight_mode(flight_mode_t mode);
+
+/**
+ * @brief      Only used by printf_manager right now, but could be useful
+ * elsewhere.
+ *
+ * @param[in]  mode  The mode
+ *
+ * @return     0 on success or -1 on error
+ */
+int print_flight_status(flight_status_t status);
 
 
 

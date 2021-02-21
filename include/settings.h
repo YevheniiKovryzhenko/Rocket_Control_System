@@ -85,6 +85,7 @@ typedef struct settings_t{
 	int printf_u;
 	int printf_motors;
 	int printf_mode;
+	int printf_status;
 	int printf_xbee;
 	int printf_rev;
 	int printf_counter;

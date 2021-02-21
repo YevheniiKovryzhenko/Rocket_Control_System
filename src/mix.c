@@ -59,7 +59,7 @@ int mix_init(rotor_layout_t layout)
 		break;
 	case LAYOUT_4PLUS:
 		rotors = 4;
-		dof = 4;
+		dof = 6;
 		mix_matrix = mix_4plus;
 		break;
 	default:
