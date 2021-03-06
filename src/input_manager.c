@@ -44,15 +44,15 @@ int pick_data_source()
 		//assume a single source of information for now
 
 		//owerwrite the estimated state on the board with the external data:
-		/*
-		state_estimate.alt_bmp			= fallback.alt; //get the altitude
-		state_estimate.alt_bmp_vel		= fallback.alt_vel; //get vertial velocity
-		state_estimate.proj_ap			= fallback.proj_ap;
-		state_estimate.alt_bmp_accel	= fallback.alt_accel; //get vertical accel
-		state_estimate.roll				= fallback.roll;
-		state_estimate.pitch			= fallback.pitch;
-		state_estimate.yaw				= fallback.yaw;
-		*/
+		
+		//state_estimate.alt_bmp			= fallback.alt; //get the altitude
+		//state_estimate.alt_bmp_vel		= fallback.alt_vel; //get vertial velocity
+		//state_estimate.proj_ap			= fallback.proj_ap;
+		//state_estimate.alt_bmp_accel	= fallback.alt_accel; //get vertical accel
+		//state_estimate.roll				= fallback.roll;
+		//state_estimate.pitch			= fallback.pitch;
+		//state_estimate.yaw				= fallback.yaw;
+		
 		//flight_status = fallback.flight_state;
 
 		if (fallback.flight_state > flight_status)

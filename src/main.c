@@ -378,20 +378,6 @@ int main(int argc, char *argv[])
 	printf_cleanup();
 	log_manager_cleanup();
 	rc_encoder_cleanup();
-	
-	/*
-	if (settings.enable_simple_serial)
-	{
-		if (settings.enable_serial_1)
-		{
-			simple_serial_cleanup(&serial_1);
-		}
-		if (settings.enable_serial_2)
-		{
-			simple_serial_cleanup(&serial_2);
-		}
-	}
-	*/
 
 	// turn off red LED and blink green to say shut down was safe
 	rc_led_set(RC_LED_RED,0);

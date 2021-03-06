@@ -68,8 +68,6 @@ typedef struct settings_t{
 	int use_xbee_roll;
 	int enable_encoders;
 	int enable_serial;
-	int enable_serial_1;
-	int enable_serial_2;
 	char serial_port_1[20];
 	char serial_port_2[20];
 	int serial_port_1_baud;

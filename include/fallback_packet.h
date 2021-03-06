@@ -30,7 +30,6 @@ typedef struct fallback_packet_t
 	//double alt;						///< altitude estimate
 	//double alt_vel;					///< vertical velocity estimate 
 	//double alt_accel;				///< vertical accel estimate 
-   
 } fallback_packet_t;
 
 #define NUM_FRAMING_BYTES_SERIAL 4                 // 2 START bytes + 2 Fletcher-16 checksum bytes
