@@ -257,14 +257,14 @@ static int __parse_flight_mode(json_object* jobj_str, flight_mode_t* mode)
 	if(strcmp(tmp_str, "IDLE")==0){
 		*mode = IDLE;
 	}
-	else if(strcmp(tmp_str, "APP_CTRL")==0){
-		*mode = APP_CTRL;
+	else if(strcmp(tmp_str, "AP_CTRL")==0){
+		*mode = AP_CTRL;
 	}
 	else if(strcmp(tmp_str, "YP_TEST")==0){
 		*mode = YP_TEST;
 	}
-	else if(strcmp(tmp_str, "YP_STABILIZE_APP")==0){
-		*mode = YP_STABILIZE_APP;
+	else if(strcmp(tmp_str, "YP_STABILIZE_AP")==0){
+		*mode = YP_STABILIZE_AP;
 	}
 	else{
 		fprintf(stderr,"ERROR: invalid flight mode\n");
@@ -529,9 +529,11 @@ int settings_load_from_file(char* path)
 	#ifdef DEBUG
 	fprintf(stderr, "orientation: %d\n", settings.orientation);
 	#endif
-	PARSE_DOUBLE_MIN_MAX(v_nominal,7.0,18.0)
+	PARSE_DOUBLE_MIN_MAX(v_nominal,6.0,9.0)
+	PARSE_DOUBLE_MIN_MAX(v_nominal_jack, 7.0, 18.0)
 	#ifdef DEBUG
 	fprintf(stderr,"v_nominal: %f\n",settings.v_nominal);
+	fprintf(stderr,"v_nominal_jack: %f\n", settings.v_nominal_jack);
 	#endif
 	PARSE_DOUBLE_MIN_MAX(target_altitude_m, 0.0, 100000.0);
 	#ifdef DEBUG
@@ -541,7 +543,7 @@ int settings_load_from_file(char* path)
 	PARSE_DOUBLE_MIN_MAX(event_launch_dh,0.0,1000.0)
 	PARSE_DOUBLE_MIN_MAX(event_ignition_delay_s,0.0,50.0)
 	PARSE_DOUBLE_MIN_MAX(event_cutoff_delay_s,0.0,50.0)
-	PARSE_DOUBLE_MIN_MAX(event_appogee_delay_s,0.0,50.0)
+	PARSE_DOUBLE_MIN_MAX(event_apogee_delay_s,0.0,50.0)
 	PARSE_DOUBLE_MIN_MAX(event_landing_delay_early_s, 0.0, 50.0)
 	PARSE_DOUBLE_MIN_MAX(event_landing_delay_late_s, 0.0, 50.0)
 	PARSE_DOUBLE_MIN_MAX(event_start_landing_alt_m, -10000.0, 100000.0)
@@ -553,7 +555,7 @@ int settings_load_from_file(char* path)
 	PARSE_BOOL(use_xbee_pitch)
 	PARSE_BOOL(use_xbee_roll)
 	PARSE_BOOL(enable_encoders)
-	PARSE_BOOL(enable_simple_serial)
+	PARSE_BOOL(enable_serial)
 	PARSE_BOOL(enable_serial_1)
 	PARSE_STRING(serial_port_1)
 	PARSE_INT(serial_port_1_baud)
@@ -563,8 +565,9 @@ int settings_load_from_file(char* path)
 
 	// PRINTF OPTIONS
 	PARSE_BOOL(printf_arm)
+	PARSE_BOOL(printf_battery)
 	PARSE_BOOL(printf_altitude)
-	PARSE_BOOL(printf_proj_app)
+	PARSE_BOOL(printf_proj_ap)
 	PARSE_BOOL(printf_rpy)
 	PARSE_BOOL(printf_setpoint)
 	PARSE_BOOL(printf_u)

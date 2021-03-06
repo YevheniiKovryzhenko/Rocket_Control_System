@@ -59,15 +59,15 @@ static int __write_header(FILE* fd)
 	}
 
 	if(settings.log_sensors){
-		fprintf(fd, ",v_batt,bmp_pressure_raw,alt_bmp_raw,alt_bmp,alt_bmp_vel,alt_bmp_accel,gyro_roll,gyro_pitch,gyro_yaw,accel_X,accel_Y,accel_Z");
+		fprintf(fd, ",v_batt,v_batt_jack,bmp_pressure_raw,alt_bmp_raw,alt_bmp,alt_bmp_vel,alt_bmp_accel,gyro_roll,gyro_pitch,gyro_yaw,accel_X,accel_Y,accel_Z");
 	}
 
 	if(settings.log_state){
-		fprintf(fd, ",roll,pitch,yaw,X,Y,Z,Xdot,Ydot,Zdot,xp,yp,zp,xb,yb,zb,proj_app");
+		fprintf(fd, ",roll,pitch,yaw,X,Y,Z,Xdot,Ydot,Zdot,xp,yp,zp,xb,yb,zb,proj_ap");
 	}
 
 	if(settings.log_setpoint){
-		fprintf(fd, ",sp_roll,sp_pitch,sp_yaw,sp_X,sp_Y,sp_Z,sp_Xdot,sp_Ydot,sp_Zdot");
+		fprintf(fd, ",sp_roll,sp_pitch,sp_yaw,sp_X,sp_Y,sp_Z,sp_Xdot,sp_Ydot,sp_Zdot,sp_alt");
 	}
 
 	if(settings.log_control_u){
@@ -111,8 +111,9 @@ static int __write_log_entry(FILE* fd, log_entry_t e)
 	}
 	
 	if(settings.log_sensors){
-		fprintf(fd, ",%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F",\
+		fprintf(fd, ",%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F",\
 							e.v_batt,\
+							e.v_batt_jack,\
 							e.bmp_pressure_raw,\
 							e.alt_bmp_raw,\
 							e.alt_bmp,\
@@ -143,11 +144,11 @@ static int __write_log_entry(FILE* fd, log_entry_t e)
 							e.xb,\
 							e.yb,\
 							e.zb,\
-							e.proj_app);
+							e.proj_ap);
 	}
 
 	if(settings.log_setpoint){
-		fprintf(fd, ",%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F",\
+		fprintf(fd, ",%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F",\
 							e.sp_roll,\
 							e.sp_pitch,\
 							e.sp_yaw,\
@@ -156,7 +157,8 @@ static int __write_log_entry(FILE* fd, log_entry_t e)
 							e.sp_Z,\
 							e.sp_Xdot,\
 							e.sp_Ydot,\
-							e.sp_Zdot);
+							e.sp_Zdot,\
+							e.sp_alt);
 	}
 
 	if(settings.log_control_u){
@@ -317,7 +319,7 @@ static log_entry_t __construct_new_entry()
 	l.alt_bmp			= state_estimate.alt_bmp;
 	l.alt_bmp_vel		= state_estimate.alt_bmp_vel;
 	l.alt_bmp_accel		= state_estimate.alt_bmp_accel;
-	l.proj_app			= state_estimate.proj_app;
+	l.proj_ap			= state_estimate.proj_ap;
 	l.gyro_roll			= state_estimate.gyro[0];
 	l.gyro_pitch		= state_estimate.gyro[1];
 	l.gyro_yaw			= state_estimate.gyro[2];

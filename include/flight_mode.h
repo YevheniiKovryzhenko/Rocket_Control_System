@@ -16,19 +16,19 @@ typedef enum flight_mode_t{
 	 */
 	IDLE,
 	/**
-	 * APP_CTRL mode does only altitude feedback control using predicted appogee
+	 * AP_CTRL mode does only altitude feedback control using predicted apogee
 	 */
-	 APP_CTRL,
+	 AP_CTRL,
 	/**
 	 * YP_TEST mode is only for TESTING pitch and yaw controllers and is set to fight any
 	 * attitude deviation from vertical.
 	 */
 	 YP_TEST,
 	 /**
-	 * YP_STABILIZE_APP mode has appogee controler enabled and uses pitch and yaw controllers for 
+	 * YP_STABILIZE_AP mode has apogee controler enabled and uses pitch and yaw controllers for 
 	 * active stabilization
 	 */
-	 YP_STABILIZE_APP
+	 YP_STABILIZE_AP
 } flight_mode_t;
 
 

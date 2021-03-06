@@ -17,6 +17,7 @@
 #include <rc/time.h> // for nanos
 
 #include <xbee_serial.h>
+#include <settings.h>
 
 // Below for PRId64
 #include <inttypes.h>
@@ -33,13 +34,21 @@ int XBEE_ring_overflow=0, XBEE_rdIndex=0, XBEE_wrIndex=0;
 unsigned char XBEE_ringbuffer[XBEE_RING_BUFSIZE];
 
 int XBEE_init() {
-  int baudRate = 230400;  
-  xbee_portID = serial_open("/dev/ttyS1",baudRate,0); // Nonblocking = 0, BLOCKING = 1 
-  if(xbee_portID == -1)    {
+    int baudRate = settings.serial_port_2_baud;
+    char port[20];
+    strcpy(port, settings.serial_port_2);
+    xbee_portID = serial_open(port, baudRate, 0); // Nonblocking = 0, BLOCKING = 1
+    printf(" Serial port %s \n", port);
+    printf(" Baud_rate %d \n", baudRate);
+
+
+    //int baudRate = 230400;  
+    //xbee_portID = serial_open("/dev/ttyS1",baudRate,0); // Nonblocking = 0, BLOCKING = 1 
+    if(xbee_portID == -1)    {
     printf("Failed to open Serial Port\n");
     return -1;
-  }
-  return 0;
+    }
+    return 0;
 }
 
 

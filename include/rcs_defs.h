@@ -42,6 +42,7 @@ typedef enum arm_state_t {
 #define MAX_YAW_RATE		2.5	// rad/s
 #define MAX_ROLL_SETPOINT	0.2	// rad
 #define MAX_PITCH_SETPOINT	0.2	// rad
+#define ALT_MAX_ERROR		300.0	//< meters.
 //#define MAX_CLIMB_RATE		1.0	// m/s
 #define YAW_DEADZONE		0.02
 //#define THROTTLE_DEADZONE	0.02

@@ -21,8 +21,6 @@
 #include <rcs_defs.h>
 #include <flight_mode.h>
 
-#define XYZ_MAX_ERROR	700.0 ///< meters.
-
 setpoint_t setpoint; // extern variable in setpoint_manager.h
 flight_status_t flight_status;
 events_t events;
@@ -34,14 +32,14 @@ double __finddt_s(uint64_t ti) {
 }
 
 
-void __update_app(void)
+void __update_ap(void)
 {
 	/*
 	This function should be called to update the altitude controller command.
 	Note that we are trying to limit the error input to the feedback controllers,
-	therefore we need to avoid values above a certain limit. Even if the target appogee is 
-	fixed, controller will see error in the range of XYZ_MAX_ERROR.
-	We would theoretically want to make controller not do anything if projected appogee
+	therefore we need to avoid values above a certain limit. Even if the target apogee is 
+	fixed, controller will see error in the range of ALT_MAX_ERROR.
+	We would theoretically want to make controller not do anything if projected apogee
 	is bellow the target since we don't have control over propulsion system, but this should 
 	not be done within this funtion and be a dedicated flight mode (CRUISE or DESCENT)
 
@@ -52,16 +50,16 @@ void __update_app(void)
 	*/
 
 	// make sure setpoint doesn't go too far to avoid controllers going crazy
-	if (state_estimate.proj_app > (settings.target_altitude_m + XYZ_MAX_ERROR)) {
-		setpoint.alt = settings.target_altitude_m + XYZ_MAX_ERROR;//if above target altitude
+	if (state_estimate.proj_ap > (settings.target_altitude_m + ALT_MAX_ERROR)) {
+		setpoint.alt = settings.target_altitude_m + ALT_MAX_ERROR;//if above target altitude
 		return;
 	}
-	else if (state_estimate.proj_app < (settings.target_altitude_m - XYZ_MAX_ERROR)) {
-		setpoint.alt = settings.target_altitude_m - XYZ_MAX_ERROR; //if below target altitude
+	else if (state_estimate.proj_ap < (settings.target_altitude_m - ALT_MAX_ERROR)) {
+		setpoint.alt = settings.target_altitude_m - ALT_MAX_ERROR; //if below target altitude
 		return;
 	}
 	else {
-		setpoint.alt = state_estimate.proj_app; //dont limit the error
+		setpoint.alt = state_estimate.proj_ap; //dont limit the error
 	}
 	
 	return;
@@ -133,15 +131,15 @@ int __flight_status_update(void)
 
 			//This should happen once the system just got armed (on the launchpad)
 			events.ground_alt	= state_estimate.alt_bmp;
-			events.appogee_alt	= state_estimate.alt_bmp; //initialize appogee alt
+			events.apogee_alt	= state_estimate.alt_bmp; //initialize apogee alt
 
 			flight_status = STANDBY; //switch to the next flight status
 			return 0;
 		}
 		else if (flight_status == STANDBY) //ARMED and waiting for IGNITION
 		{
-			//always keep the highest altitude as appogee altitude (UNPOWERED_ASCENT has its own appogee detection scheme)
-			if (events.appogee_alt < state_estimate.alt_bmp && flight_status != UNPOWERED_ASCENT) events.appogee_alt = state_estimate.alt_bmp;
+			//always keep the highest altitude as apogee altitude (UNPOWERED_ASCENT has its own apogee detection scheme)
+			if (events.apogee_alt < state_estimate.alt_bmp && flight_status != UNPOWERED_ASCENT) events.apogee_alt = state_estimate.alt_bmp;
 
 			if (events.ignition_fl != 1 && fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
 			{
@@ -177,8 +175,8 @@ int __flight_status_update(void)
 		}
 		else if (flight_status == POWERED_ASCENT) //motor is burning and we can't do anything about it
 		{
-			//always keep the highest altitude as appogee altitude (UNPOWERED_ASCENT has its own appogee detection scheme)
-			if (events.appogee_alt < state_estimate.alt_bmp && flight_status != UNPOWERED_ASCENT) events.appogee_alt = state_estimate.alt_bmp;
+			//always keep the highest altitude as apogee altitude (UNPOWERED_ASCENT has its own apogee detection scheme)
+			if (events.apogee_alt < state_estimate.alt_bmp && flight_status != UNPOWERED_ASCENT) events.apogee_alt = state_estimate.alt_bmp;
 
 			//need to detect motor burnout:
 			if (events.meco_fl != 1 && state_estimate.alt_bmp_vel >= 0.0 && state_estimate.alt_bmp_accel <= 0.0)
@@ -190,7 +188,7 @@ int __flight_status_update(void)
 			else if (events.ignition_fl && __finddt_s(events.init_time) >= settings.event_cutoff_delay_s && events.meco_fl && state_estimate.alt_bmp_vel >= 0.0 && state_estimate.alt_bmp_accel <= 0.0)
 			{
 				//flight_status		= UNPOWERED_ASCENT; //should be safe to proceed now
-				events.appogee_fl	= 0;				//reset apogee flag just in case
+				events.apogee_fl	= 0;				//reset apogee flag just in case
 				return 0;
 			}
 			else
@@ -203,30 +201,30 @@ int __flight_status_update(void)
 		}
 		else if (flight_status == UNPOWERED_ASCENT)
 		{
-			//finally! here's when we can switch the flight mode to appogee control and do any active control
+			//finally! here's when we can switch the flight mode to apogee control and do any active control
 			if (events.tipover_detected != 1)
 			{
-				user_input.flight_mode = APP_CTRL; //keep appogee control always active
+				user_input.flight_mode = AP_CTRL; //keep apogee control always active
 			}
 
-			//we have to detect appogee:
-			//always keep the highest altitude as appogee altitude
-			if (events.appogee_fl != 1 && events.appogee_alt < state_estimate.alt_bmp) //check if altitude has increased for the first time
+			//we have to detect apogee:
+			//always keep the highest altitude as apogee altitude
+			if (events.apogee_fl != 1 && events.apogee_alt < state_estimate.alt_bmp) //check if altitude has increased for the first time
 			{
-				events.appogee_alt	= state_estimate.alt_bmp; //set appogee to the current alt
+				events.apogee_alt	= state_estimate.alt_bmp; //set apogee to the current alt
 				events.init_time	= rc_nanos_since_boot();
-				events.appogee_fl	= 1;
+				events.apogee_fl	= 1;
 				return 0;
 			}
-			else if (events.appogee_fl && events.appogee_alt < state_estimate.alt_bmp) //check if altitude has increased again
+			else if (events.apogee_fl && events.apogee_alt < state_estimate.alt_bmp) //check if altitude has increased again
 			{
-				events.appogee_fl	= 0; //false alarm, reset flag
-				events.appogee_alt	= state_estimate.alt_bmp; //set appogee to the current alt
+				events.apogee_fl	= 0; //false alarm, reset flag
+				events.apogee_alt	= state_estimate.alt_bmp; //set apogee to the current alt
 				return 0;
 			}
-			else if (events.appogee_fl && __finddt_s(events.init_time) >= settings.event_appogee_delay_s) //if no increase in alt for a few milliseconds
+			else if (events.apogee_fl && __finddt_s(events.init_time) >= settings.event_apogee_delay_s) //if no increase in alt for a few milliseconds
 			{
-				if (events.appogee_alt > state_estimate.alt_bmp && state_estimate.alt_bmp_vel <= 0.0)
+				if (events.apogee_alt > state_estimate.alt_bmp && state_estimate.alt_bmp_vel <= 0.0)
 				{
 					// this is an early trigger, which should work if velocity is estimated properly
 					//flight_status	= DESCENT_TO_LAND;
@@ -234,21 +232,21 @@ int __flight_status_update(void)
 					events.land_fl		= 0;
 					events.land_fl_vel	= 0;
 					
-					//events.land_alt = state_estimate.alt_bmp; //we have already passed appogee, so don't overwrite appogee altitude!
+					//events.land_alt = state_estimate.alt_bmp; //we have already passed apogee, so don't overwrite apogee altitude!
 					return 0;
 				}
 
 				//will only reach this line if velocity is not estimated properly
-				//wait more to confirm appogee based of altitude change
+				//wait more to confirm apogee based of altitude change
 
-				if (events.appogee_alt > state_estimate.alt_bmp && __finddt_s(events.init_time) >= settings.event_appogee_delay_s * 10.0)
+				if (events.apogee_alt > state_estimate.alt_bmp && __finddt_s(events.init_time) >= settings.event_apogee_delay_s * 10.0)
 				{
 					// this is a late failsafe to safeguard against velocity estimation failure
 					//flight_status	= DESCENT_TO_LAND;
 					//pre-set everything for DESCENT_TO_LAND
 					events.land_fl		= 0;
 					events.land_fl_vel	= 0;
-					events.land_alt		= state_estimate.alt_bmp; //we have already passed appogee for sure, so don't overwrite appogee altitude!
+					events.land_alt		= state_estimate.alt_bmp; //we have already passed apogee for sure, so don't overwrite apogee altitude!
 					return 0;
 				}
 
@@ -257,8 +255,8 @@ int __flight_status_update(void)
 			}
 			else
 			{
-				// appogee has not been detected - reset flag
-				events.appogee_fl = 0;
+				// apogee has not been detected - reset flag
+				events.apogee_fl = 0;
 				return 0;
 			}
 		}
@@ -423,7 +421,7 @@ int setpoint_manager_update(void)
 	{
 		//user_input.requested_arm_mode = ARMED;
 		user_input.flight_mode = YP_TEST;
-		//user_input.flight_mode = APP_CTRL;
+		//user_input.flight_mode = AP_CTRL;
 		//flight_status = TEST;
 	}
 	
@@ -457,7 +455,7 @@ int setpoint_manager_update(void)
 		setpoint.alt	= 0;
 		
 		break;
-	case APP_CTRL:
+	case AP_CTRL:
 		// configure which controllers are enabled
 		setpoint.en_alt_ctrl	= 1;
 		setpoint.en_r_ctrl		= 0;
@@ -467,7 +465,7 @@ int setpoint_manager_update(void)
 		setpoint.pitch = 0;
 		setpoint.yaw = 0;
 		
-		__update_app();
+		__update_ap();
 		break;
 
 	case YP_TEST:
@@ -482,7 +480,7 @@ int setpoint_manager_update(void)
 
 		break;
 
-	case YP_STABILIZE_APP:
+	case YP_STABILIZE_AP:
 		// configure which controllers are enabled
 		setpoint.en_alt_ctrl	= 1;
 		setpoint.en_r_ctrl		= 0;
@@ -492,7 +490,7 @@ int setpoint_manager_update(void)
 		setpoint.pitch	= 0;
 		setpoint.yaw	= 0;
 
-		__update_app();
+		__update_ap();
 		//TODO: implement limits on attitude control
 		break;
 

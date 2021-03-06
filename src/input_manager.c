@@ -47,7 +47,7 @@ int pick_data_source()
 		/*
 		state_estimate.alt_bmp			= fallback.alt; //get the altitude
 		state_estimate.alt_bmp_vel		= fallback.alt_vel; //get vertial velocity
-		state_estimate.proj_app			= fallback.proj_app;
+		state_estimate.proj_ap			= fallback.proj_ap;
 		state_estimate.alt_bmp_accel	= fallback.alt_accel; //get vertical accel
 		state_estimate.roll				= fallback.roll;
 		state_estimate.pitch			= fallback.pitch;

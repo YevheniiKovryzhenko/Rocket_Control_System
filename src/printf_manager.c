@@ -64,11 +64,14 @@ static int __print_header()
 	if(settings.printf_arm){
 		printf("  arm   |");
 	}
+	if (settings.printf_battery) {
+		printf("%s v_batt |v_jack|", __next_colour());
+	}
 	if(settings.printf_altitude){
 		printf("%s alt(m) |altdot|", __next_colour());
 	}
-	if (settings.printf_proj_app) {
-		printf("%saltacc|APP(m)|", __next_colour());
+	if (settings.printf_proj_ap) {
+		printf("%saltacc|AP(m)|", __next_colour());
 	}
 	if(settings.printf_rpy){
 		printf("%s roll|pitch| yaw |", __next_colour());
@@ -146,15 +149,20 @@ static void* __printf_manager_func(__attribute__ ((unused)) void* ptr)
 			}
 		}
 		__reset_colour();
+		if (settings.printf_battery) {
+			printf("%s%+5.2f |%+5.2f |", __next_colour(),\
+					state_estimate.v_batt_lp, \
+					state_estimate.v_batt_lp_jack);
+		}
 		if(settings.printf_altitude){
 			printf("%s%+5.2f |%+5.2f |",	__next_colour(),\
 						state_estimate.alt_bmp,\
 						state_estimate.alt_bmp_vel);
 		}
-		if (settings.printf_proj_app) {
+		if (settings.printf_proj_ap) {
 			printf("%s%+5.2f |%+5.2f |", __next_colour(), \
 				state_estimate.alt_bmp_accel,\
-				state_estimate.proj_app);
+				state_estimate.proj_ap);
 		}
 		if(settings.printf_rpy){
 			printf(KCYN);
@@ -259,14 +267,14 @@ int print_flight_mode(flight_mode_t mode){
 	case IDLE:
 		printf("%sIDLE%s",KYEL,KNRM);
 		return 0;
-	case APP_CTRL:
-		printf("%sAPP_CTRL%s",KCYN,KNRM);
+	case AP_CTRL:
+		printf("%sAP_CTRL%s",KCYN,KNRM);
 		return 0;
 	case YP_TEST:
 		printf("%YP_TEST%s",KCYN,KNRM);
 		return 0;
-	case YP_STABILIZE_APP:
-		printf("%YP_STABILIZE_APP%s",KCYN,KNRM);
+	case YP_STABILIZE_AP:
+		printf("%YP_STABILIZE_AP%s",KCYN,KNRM);
 		return 0;
 	default:
 		fprintf(stderr,"ERROR in print_flight_mode, unknown flight mode\n");

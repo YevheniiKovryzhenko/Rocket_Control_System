@@ -35,6 +35,7 @@ typedef struct log_entry_t{
 	/** @name sensors */
 	///@{
 	double	v_batt;
+	double	v_batt_jack;
 	double	bmp_pressure_raw;
 	double	alt_bmp_raw;
 	double	alt_bmp;
@@ -62,7 +63,7 @@ typedef struct log_entry_t{
 	double	xp;
 	double	yp;
 	double	zp;
-	double	proj_app;
+	double	proj_ap;
 
 	///@}xbee
 
@@ -83,6 +84,7 @@ typedef struct log_entry_t{
 	double	sp_Xdot;
 	double	sp_Ydot;
 	double	sp_Zdot;
+	double	sp_alt;
 	///@}
 
 	/** @name orthogonal control outputs */

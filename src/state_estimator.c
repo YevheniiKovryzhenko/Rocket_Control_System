@@ -34,23 +34,20 @@ rc_mpu_data_t mpu_data;
 static rc_bmp_data_t bmp_data;
 
 // battery filter
-static rc_filter_t batt_lp = RC_FILTER_INITIALIZER;
+static rc_filter_t batt_lp		= RC_FILTER_INITIALIZER;
+static rc_filter_t batt_lp_jack = RC_FILTER_INITIALIZER;
 
 // altitude filter components
 static rc_kalman_t alt_kf = RC_KALMAN_INITIALIZER;
 static rc_filter_t acc_lp = RC_FILTER_INITIALIZER;
 
-// This function estimates the appogee using current state of the vehicle
+// This function estimates the apogee using current state of the vehicle
 static void __projected_altitude(void) {
-	state_estimate.proj_app = fabs(state_estimate.alt_bmp_vel * 
+	state_estimate.proj_ap = fabs(state_estimate.alt_bmp_vel * 
 		state_estimate.alt_bmp_vel) / 
-		(2.0 * (-state_estimate.alt_bmp_accel)) * 
-		log(fabs((state_estimate.alt_bmp_accel - GRAVITY) / GRAVITY)) +
+		(2.0 * fabs(state_estimate.alt_bmp_accel + GRAVITY)) * 
+		log(fabs((state_estimate.alt_bmp_accel) / GRAVITY)) +
 		state_estimate.alt_bmp;
-
-	//printf("\n First: %f", state_estimate.alt_bmp_accel / GRAVITY);
-	//printf("\n Second: %f", fabs((state_estimate.alt_bmp_accel) / GRAVITY));
-	//printf("\n Third: %f", log(fabs((state_estimate.alt_bmp_accel) / GRAVITY)));
 	return;
 }
 
@@ -58,17 +55,32 @@ static void __projected_altitude(void) {
 static void __batt_init(void)
 {
 	// init the battery low pass filter
+	rc_filter_moving_average(&batt_lp_jack, 20, DT);
+	double dc_read_jack = rc_adc_dc_jack();
+	if (dc_read_jack < 3.0){
+		if (settings.warnings_en) {
+			fprintf(stderr, "WARNING: ADC read %0.1fV on the barrel jack. Please connect\n", dc_read_jack);
+			fprintf(stderr, "battery to barrel jack, assuming nominal voltage for now.\n");
+		}
+		dc_read_jack = settings.v_nominal_jack;
+	}
+	rc_filter_prefill_inputs(&batt_lp_jack, dc_read_jack);
+	rc_filter_prefill_outputs(&batt_lp_jack, dc_read_jack);
+
+
+	// init the battery low pass filter
 	rc_filter_moving_average(&batt_lp, 20, DT);
 	double dc_read = rc_adc_dc_jack();
-	if (dc_read < 3.0){
+	if (dc_read < 3.0) {
 		if (settings.warnings_en) {
-			fprintf(stderr, "WARNING: ADC read %0.1fV on the barrel jack. Please connect\n", dc_read);
-			fprintf(stderr, "battery to barrel jack, assuming nominal voltage for now.\n");
+			fprintf(stderr, "WARNING: ADC read %0.1fV on the 2S lipo connector. Please connect\n", dc_read);
+			fprintf(stderr, "battery to 2S connector, assuming nominal voltage for now.\n");
 		}
 		dc_read = settings.v_nominal;
 	}
 	rc_filter_prefill_inputs(&batt_lp, dc_read);
 	rc_filter_prefill_outputs(&batt_lp, dc_read);
+	return;
 	return;
 }
 
@@ -76,16 +88,25 @@ static void __batt_init(void)
 
 static void __batt_march(void)
 {
-	double tmp = rc_adc_dc_jack();
-	if(tmp<3.0) tmp = settings.v_nominal;
+	double tmp		= rc_adc_batt();
+	if(tmp<3.0) tmp	= settings.v_nominal;
+
 	state_estimate.v_batt_raw = tmp;
 	state_estimate.v_batt_lp = rc_filter_march(&batt_lp, tmp);
+
+
+	double tmp_jack = rc_adc_dc_jack();
+	if (tmp_jack < 3.0) tmp_jack = settings.v_nominal_jack;
+
+	state_estimate.v_batt_raw_jack = tmp_jack;
+	state_estimate.v_batt_lp_jack = rc_filter_march(&batt_lp_jack, tmp_jack);
 	return;
 }
 
 static void __batt_cleanup(void)
 {
 	rc_filter_free(&batt_lp);
+	rc_filter_free(&batt_lp_jack);
 	return;
 }
 
@@ -504,7 +525,7 @@ static void __altitude_march(void)
 	//state_estimate.alt_bmp_accel= alt_kf.x_est.d[2]; //does not work rn (very slow updates)
 	state_estimate.alt_bmp_accel = acc_lp.newest_output; //quick, slightly filtered data
 	// Estimate apogee altitude:
-	__projected_altitude(); //updates state_estimate.proj_app
+	__projected_altitude(); //updates state_estimate.proj_ap
 	return;
 }
 
@@ -555,7 +576,7 @@ static void __feedback_select(void)
 		
 	}
 
-	if (settings.enable_simple_serial)
+	if (settings.enable_serial)
 	{
 		if(pick_data_source() != 0) fprintf(stderr,"ERROR: something went wrong in pick_data_source. Failed to overwrite with external input\n");
 	}

@@ -26,7 +26,7 @@ typedef struct fallback_packet_t
 	//double roll;					///< Rotation about x of the body 
 	//double pitch;					///< Rotation about y of the body 
 	//double yaw;						///< Rotation about z of the body 
-	//double proj_app;				///< estimated projected appogee the vehicle will reach given current flight condition
+	//double proj_ap;				///< estimated projected apogee the vehicle will reach given current flight condition
 	//double alt;						///< altitude estimate
 	//double alt_vel;					///< vertical velocity estimate 
 	//double alt_accel;				///< vertical accel estimate 

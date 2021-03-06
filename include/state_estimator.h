@@ -79,7 +79,7 @@ typedef struct state_estimate_t{
 	double X;
 	double Y;
 	double Z;
-	double proj_app;		///< estimated projected appogee the vehicle will reach given current flight condition
+	double proj_ap;		///< estimated projected apogee the vehicle will reach given current flight condition
 	// planned path
 	double xp;
 	double yp;
@@ -136,9 +136,11 @@ typedef struct state_estimate_t{
 
 	/** @name Other */
 	///@{
-	double v_batt_raw;	///< main battery pack voltage (v)
-	double v_batt_lp;	///< main battery pack voltage with low pass filter (v)
-	double bmp_temp;	///< temperature of barometer
+	double v_batt_raw;		///< main battery pack voltage (v)
+	double v_batt_lp;		///< main battery pack voltage with low pass filter (v)
+	double v_batt_raw_jack;	///< main battery pack voltage (v)
+	double v_batt_lp_jack;	///< main battery pack voltage with low pass filter (v)
+	double bmp_temp;		///< temperature of barometer
 	///@}
 
 

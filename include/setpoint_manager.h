@@ -79,12 +79,12 @@ typedef struct events_t {
 	double ground_alt;
 	double ignition_alt;
 	double burnout_alt;
-	double appogee_alt;
+	double apogee_alt;
 	double land_alt;
 	int ignition_fl;	//1 if ignition was detected
 	int burnout_fl;		//1 if burnout was detected
 	int meco_fl;		//1 if Main Engine Cutoff was detected
-	int appogee_fl;		//1 if appogee has been detected
+	int apogee_fl;		//1 if apogee has been detected
 	int land_fl;		//1 if confirmed landning (slow, altitude based)
 	int land_fl_vel;	//1 if confirmed landning (fast, velocity and altitude based)
 	int tipover_detected;

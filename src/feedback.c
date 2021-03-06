@@ -181,6 +181,7 @@ int feedback_march(void)
 	// check for attitude deviation:
 	if (fabs(state_estimate.yaw) > TIP_ANGLE || fabs(state_estimate.pitch) > TIP_ANGLE) {
 		events.tipover_detected = 1;
+
 		//currenty this disables all control if there is too much yaw or pitch (rotation about y and z if x is in the direction of the nosecone)
 		//check setpoint_mannager for cutoff sequence
 	}
@@ -230,8 +231,8 @@ int feedback_march(void)
 		}
 		rc_filter_enable_saturation(&D_X, min, max);
 		D_X.gain = D_X_gain_orig * settings.v_nominal / state_estimate.v_batt_lp; //updating the gains based on battery voltage
-		//u[VEC_X] = rc_filter_march(&D_X, -50.0);
-		u[VEC_X] = rc_filter_march(&D_X, (settings.target_altitude_m - setpoint.alt)); //this has to be the error between target and predicted value
+		//u[VEC_X] = rc_filter_march(&D_X, (settings.target_altitude_m - setpoint.alt)); //this has to be the error between target and predicted value
+		u[VEC_X] = rc_filter_march(&D_X, (settings.target_altitude_m - setpoint.alt)/ALT_MAX_ERROR); //this has to be the error between target and predicted value
 		mix_add_input(u[VEC_X], VEC_X, mot);
 	}
 

@@ -49,12 +49,13 @@ typedef struct settings_t{
 	thrust_map_t thrust_map;
 	rc_mpu_orientation_t orientation;
 	double v_nominal;
+	double v_nominal_jack;
 	double target_altitude_m;
 	double event_launch_accel;
 	double event_launch_dh;
 	double event_ignition_delay_s;
 	double event_cutoff_delay_s;
-	double event_appogee_delay_s;
+	double event_apogee_delay_s;
 	double event_landing_delay_early_s;
 	double event_landing_delay_late_s;
 	double event_start_landing_alt_m;
@@ -66,7 +67,7 @@ typedef struct settings_t{
 	int use_xbee_pitch;
 	int use_xbee_roll;
 	int enable_encoders;
-	int enable_simple_serial;
+	int enable_serial;
 	int enable_serial_1;
 	int enable_serial_2;
 	char serial_port_1[20];
@@ -78,8 +79,9 @@ typedef struct settings_t{
 	/** @name printf settings */
 	///@{
 	int printf_arm;
+	int printf_battery;
 	int printf_altitude;
-	int printf_proj_app;
+	int printf_proj_ap;
 	int printf_rpy;
 	int printf_setpoint;
 	int printf_u;
