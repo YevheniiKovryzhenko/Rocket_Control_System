@@ -22,7 +22,7 @@
 #include <settings.h>
 #include <xbee_packet_t.h>
 #include <setpoint_manager.h>
-//#include <fallback_packet.h>
+#include <fallback_packet.h>
 
 #define TWO_PI (M_PI*2.0)
 
@@ -551,6 +551,25 @@ static void __feedback_select(void)
 		}
 		if (settings.use_xbee_yaw) {
 			state_estimate.yaw 		= state_estimate.tb_mocap[2];
+		}
+	}
+	else if (user_input.use_external_state_estimation) //choose transmitted values, computed externally
+	{
+		//assume a single source of information for now
+
+		//owerwrite the estimated state on the board with the external data:
+
+		state_estimate.alt_bmp			= fallback.alt; //get the altitude
+		state_estimate.alt_bmp_vel		= fallback.alt_vel; //get vertial velocity
+		state_estimate.proj_ap			= fallback.proj_ap;
+		state_estimate.alt_bmp_accel	= fallback.alt_accel; //get vertical accel
+		state_estimate.roll				= fallback.roll;
+		state_estimate.pitch			= fallback.pitch;
+		state_estimate.yaw				= fallback.yaw;
+
+		if (fallback.flight_state > flight_status)
+		{
+			flight_status++;
 		}
 	}
 	else {

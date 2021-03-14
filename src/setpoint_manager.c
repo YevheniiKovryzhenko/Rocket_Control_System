@@ -148,20 +148,35 @@ int __flight_status_update(void)
 				events.ignition_alt = state_estimate.alt_bmp;
 				events.ignition_fl	= 1; //sensors have shown high accel and change in alt (can be noise)
 
-				//flight_status = MOTOR_IGNITION; don't accept motor ignition just yet
+				//don't accept motor ignition just yet
 				return 0;
 			}
 			else if (events.ignition_fl && __finddt_s(events.init_time) >= settings.event_ignition_delay_s)
 			{
+				//NOTE: check if ignition altitude is needed as a secondary condition
+				// 
 				//check if we are still accelerating and height has changed since detetection
-				if (fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh && fabs(state_estimate.alt_bmp - events.ignition_alt) >= settings.event_launch_dh)
+				if (fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh && fabs(state_estimate.alt_bmp - events.ignition_alt) >= settings.event_ignition_dh)
 				{
+					//&& fabs(state_estimate.alt_bmp - events.ignition_alt) >= settings.event_launch_dh
 					//accept the fact the motor is burning now
-					//flight_status	= POWERED_ASCENT;
+					flight_status	= POWERED_ASCENT;
 					events.meco_fl	= 0; //just in case, reset the MECO flag
 					return 0;
 				}
-
+				else
+				{
+					//no ignition has been detected yet
+					//reset flags if the ignition has not been confirmed
+					events.ignition_fl	= 0;
+					//flight_status		= STANDBY;
+					return 0;
+				}
+				return -1;
+			}
+			else if (events.ignition_fl && fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
+			{
+				events.ignition_fl = 1;
 				return 0;
 			}
 			else
@@ -178,17 +193,34 @@ int __flight_status_update(void)
 			//always keep the highest altitude as apogee altitude (UNPOWERED_ASCENT has its own apogee detection scheme)
 			if (events.apogee_alt < state_estimate.alt_bmp && flight_status != UNPOWERED_ASCENT) events.apogee_alt = state_estimate.alt_bmp;
 
+			if (events.ignition_fl != 1) printf("\n WARNING: POWERED_ASCENT triggered without ignition_fl == 1");
+
 			//need to detect motor burnout:
-			if (events.meco_fl != 1 && state_estimate.alt_bmp_vel >= 0.0 && state_estimate.alt_bmp_accel <= 0.0)
+			if (events.meco_fl != 1 && state_estimate.alt_bmp_vel > 0.0 && state_estimate.alt_bmp_accel < 0.0)
 			{
 				events.meco_fl = 1; //main engine cutoff detected
 				events.init_time = rc_nanos_since_boot();
 				return 0;
 			}
-			else if (events.ignition_fl && __finddt_s(events.init_time) >= settings.event_cutoff_delay_s && events.meco_fl && state_estimate.alt_bmp_vel >= 0.0 && state_estimate.alt_bmp_accel <= 0.0)
+			else if (events.meco_fl && __finddt_s(events.init_time) >= settings.event_cutoff_delay_s )
 			{
-				//flight_status		= UNPOWERED_ASCENT; //should be safe to proceed now
-				events.apogee_fl	= 0;				//reset apogee flag just in case
+				if (fabs(state_estimate.alt_bmp - events.ground_alt)  >= settings.event_cutoff_dh && state_estimate.alt_bmp_accel <= 0.0)
+				{
+					flight_status		= UNPOWERED_ASCENT; //should be safe to proceed now
+					events.apogee_fl	= 0;				//reset apogee flag just in case
+					return 0;
+				}
+				else
+				{
+					//flight_status	= POWERED_ASCENT;
+					events.meco_fl = 0; //main engine cutoff not detected (false alarm)
+					return 0;
+				}
+				return -1;
+			}
+			else if (events.meco_fl && state_estimate.alt_bmp_vel > 0.0 && state_estimate.alt_bmp_accel < 0.0)
+			{
+				events.meco_fl = 1;
 				return 0;
 			}
 			else
@@ -224,25 +256,25 @@ int __flight_status_update(void)
 			}
 			else if (events.apogee_fl && __finddt_s(events.init_time) >= settings.event_apogee_delay_s) //if no increase in alt for a few milliseconds
 			{
-				if (events.apogee_alt > state_estimate.alt_bmp && state_estimate.alt_bmp_vel <= 0.0)
+				if (events.apogee_alt > state_estimate.alt_bmp && state_estimate.alt_bmp_vel <= 0.0 && fabs(state_estimate.alt_bmp_accel) < settings.event_apogee_accel_tol)
 				{
 					// this is an early trigger, which should work if velocity is estimated properly
-					//flight_status	= DESCENT_TO_LAND;
+					flight_status	= DESCENT_TO_LAND;
 					//pre-set everything for DESCENT_TO_LAND
 					events.land_fl		= 0;
 					events.land_fl_vel	= 0;
 					
-					//events.land_alt = state_estimate.alt_bmp; //we have already passed apogee, so don't overwrite apogee altitude!
+					//we have already passed apogee, so don't overwrite apogee altitude!
 					return 0;
 				}
 
 				//will only reach this line if velocity is not estimated properly
 				//wait more to confirm apogee based of altitude change
 
-				if (events.apogee_alt > state_estimate.alt_bmp && __finddt_s(events.init_time) >= settings.event_apogee_delay_s * 10.0)
+				if ( fabs(events.apogee_alt - state_estimate.alt_bmp) > settings.event_apogee_dh)
 				{
 					// this is a late failsafe to safeguard against velocity estimation failure
-					//flight_status	= DESCENT_TO_LAND;
+					flight_status	= DESCENT_TO_LAND;
 					//pre-set everything for DESCENT_TO_LAND
 					events.land_fl		= 0;
 					events.land_fl_vel	= 0;
@@ -251,6 +283,11 @@ int __flight_status_update(void)
 				}
 
 				//none of the previous conditions have been trigered yet, just skip to the next run
+				return 0;
+			}
+			else if (events.apogee_fl)
+			{
+				//apogee is not increasing, but we haven't confirmed it yet.
 				return 0;
 			}
 			else
@@ -298,7 +335,7 @@ int __flight_status_update(void)
 				{
 					if (__finddt_s(events.init_time) >= settings.event_landing_delay_early_s) //confirm if enough time has passed (should be at least 5 seconds)
 					{
-						//flight_status = LANDED;
+						flight_status = LANDED;
 						return 0;
 					}
 					else
@@ -322,7 +359,7 @@ int __flight_status_update(void)
 				{
 					if (__finddt_s(events.init_time_landed) >= settings.event_landing_delay_late_s) //confirm if enough time has passed (should be at least 20 seconds)
 					{
-						//flight_status = LANDED;
+						flight_status = LANDED;
 						return 0;
 					}
 					else

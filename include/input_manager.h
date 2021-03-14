@@ -21,7 +21,8 @@ typedef struct user_input_t{
 	flight_mode_t flight_mode;			///< this is the user commanded flight_mode.
 	int input_active;					///< nonzero indicates some user control is coming in
 	arm_state_t requested_arm_mode;		///< set to ARMED after arming sequence is entered.
-	int use_external_state_estimation;	///< 1 if we want to use externally computed values 
+	int use_external_state_estimation;	///< 1 if we want to use externally computed values
+	int use_external_flight_state;		///< 1 if we want to use externally determined flight states.
 } user_input_t;
 
 extern user_input_t user_input;

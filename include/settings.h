@@ -53,9 +53,13 @@ typedef struct settings_t{
 	double target_altitude_m;
 	double event_launch_accel;
 	double event_launch_dh;
+	double event_ignition_dh;
 	double event_ignition_delay_s;
 	double event_cutoff_delay_s;
+	double event_cutoff_dh;
 	double event_apogee_delay_s;
+	double event_apogee_accel_tol;
+	double event_apogee_dh;
 	double event_landing_delay_early_s;
 	double event_landing_delay_late_s;
 	double event_start_landing_alt_m;
