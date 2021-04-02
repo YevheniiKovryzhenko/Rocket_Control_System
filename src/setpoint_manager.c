@@ -110,11 +110,26 @@ int __flight_status_update(void)
 		servos_return_to_nominal(); //return servos to nominal
 	}
 
+	//always keep the highest altitude as apogee altitude (UNPOWERED_ASCENT relies on this)
+	if (events.apogee_alt < state_estimate.alt_bmp) 
+	{
+		events.apogee_alt	= state_estimate.alt_bmp;
+		events.apogee_fl	= 0; //reset apogee flag
+	}
+		
+		
+
 
 	//Check flight status:
 	if (fstate.arm_state == DISARMED) //DISARMED and waiting for ARM command (servos are powered off)
 	{
-		events.ground_alt		= 0;
+		/*
+		events.ground_alt		= 0.0;
+		events.apogee_alt		= 0.0;
+		events.ignition_alt		= 0.0;
+		events.burnout_alt		= 0.0;
+		events.land_alt			= 0.0;
+		*/
 		flight_status			= WAIT;
 		user_input.flight_mode	= IDLE; //shoud never switch modes on its own while disarmed
 		return 0;
@@ -138,9 +153,6 @@ int __flight_status_update(void)
 		}
 		else if (flight_status == STANDBY) //ARMED and waiting for IGNITION
 		{
-			//always keep the highest altitude as apogee altitude (UNPOWERED_ASCENT has its own apogee detection scheme)
-			if (events.apogee_alt < state_estimate.alt_bmp && flight_status != UNPOWERED_ASCENT) events.apogee_alt = state_estimate.alt_bmp;
-
 			if (events.ignition_fl != 1 && fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
 			{
 				//Detected ignition
@@ -231,7 +243,7 @@ int __flight_status_update(void)
 				return 0;
 			}
 		}
-		else if (flight_status == UNPOWERED_ASCENT)
+		else if (flight_status == UNPOWERED_ASCENT) // updated, has not been verified yet, Jack 4/2/2021
 		{
 			//finally! here's when we can switch the flight mode to apogee control and do any active control
 			if (events.tipover_detected != 1)
@@ -241,22 +253,22 @@ int __flight_status_update(void)
 
 			//we have to detect apogee:
 			//always keep the highest altitude as apogee altitude
-			if (events.apogee_fl != 1 && events.apogee_alt < state_estimate.alt_bmp) //check if altitude has increased for the first time
+			if (events.apogee_fl != 1 && events.apogee_alt > state_estimate.alt_bmp) //check if altitude has decreased for the first time
 			{
-				events.apogee_alt	= state_estimate.alt_bmp; //set apogee to the current alt
+				//events.apogee_alt	= state_estimate.alt_bmp; //set apogee to the current alt
 				events.init_time	= rc_nanos_since_boot();
 				events.apogee_fl	= 1;
 				return 0;
 			}
-			else if (events.apogee_fl && events.apogee_alt < state_estimate.alt_bmp) //check if altitude has increased again
+			//else if (events.apogee_fl && events.apogee_alt > state_estimate.alt_bmp) //check if altitude is still below apogee
+			//{
+			//	events.apogee_fl	= 0; //false alarm, reset flag
+			//	events.apogee_alt	= state_estimate.alt_bmp; //set apogee to the current alt
+			//	return 0;
+			//}
+			else if (events.apogee_fl && __finddt_s(events.init_time) >= settings.event_apogee_delay_s) //if no increase in apogee for a few milliseconds
 			{
-				events.apogee_fl	= 0; //false alarm, reset flag
-				events.apogee_alt	= state_estimate.alt_bmp; //set apogee to the current alt
-				return 0;
-			}
-			else if (events.apogee_fl && __finddt_s(events.init_time) >= settings.event_apogee_delay_s) //if no increase in alt for a few milliseconds
-			{
-				if (events.apogee_alt > state_estimate.alt_bmp && state_estimate.alt_bmp_vel <= 0.0 && fabs(state_estimate.alt_bmp_accel) < settings.event_apogee_accel_tol)
+				if (state_estimate.alt_bmp_vel <= 0.0 && fabs(state_estimate.alt_bmp_accel) < settings.event_apogee_accel_tol)
 				{
 					// this is an early trigger, which should work if velocity is estimated properly
 					flight_status	= DESCENT_TO_LAND;
@@ -278,7 +290,8 @@ int __flight_status_update(void)
 					//pre-set everything for DESCENT_TO_LAND
 					events.land_fl		= 0;
 					events.land_fl_vel	= 0;
-					events.land_alt		= state_estimate.alt_bmp; //we have already passed apogee for sure, so don't overwrite apogee altitude!
+					
+					//events.land_alt		= state_estimate.alt_bmp; //we have already passed apogee for sure, so don't overwrite apogee altitude!
 					return 0;
 				}
 
@@ -297,7 +310,7 @@ int __flight_status_update(void)
 				return 0;
 			}
 		}
-		else if (flight_status == DESCENT_TO_LAND)
+		else if (flight_status == DESCENT_TO_LAND) //need to update it (has not been verified yet, Jack 4/2/2021)
 		{
 			//mission is almost over, we try to keep the system safe untill recovery
 			user_input.flight_mode = IDLE; //disable all controllers
