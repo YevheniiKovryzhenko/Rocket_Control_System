@@ -116,7 +116,14 @@ int __flight_status_update(void)
 		events.apogee_alt	= state_estimate.alt_bmp;
 		events.apogee_fl	= 0; //reset apogee flag
 	}
-		
+	
+	//always update the current altitude for landing if it has decreased below the tol.
+	if (events.land_alt > state_estimate.alt_bmp - settings.event_landing_alt_tol)
+	{
+		events.land_alt		= state_estimate.alt_bmp;
+		events.land_fl		= 0; //still descending
+		events.land_fl_vel	= 0;
+	}
 		
 
 
@@ -199,6 +206,7 @@ int __flight_status_update(void)
 				//flight_status		= STANDBY;
 				return 0;
 			}
+			return -1;
 		}
 		else if (flight_status == POWERED_ASCENT) //motor is burning and we can't do anything about it
 		{
@@ -242,6 +250,7 @@ int __flight_status_update(void)
 				events.meco_fl	= 0; //main engine cutoff not detected
 				return 0;
 			}
+			return -1;
 		}
 		else if (flight_status == UNPOWERED_ASCENT) // updated, has not been verified yet, Jack 4/2/2021
 		{
@@ -277,6 +286,7 @@ int __flight_status_update(void)
 					events.land_fl_vel	= 0;
 					
 					//we have already passed apogee, so don't overwrite apogee altitude!
+					events.land_alt = state_estimate.alt_bmp;
 					return 0;
 				}
 
@@ -291,7 +301,7 @@ int __flight_status_update(void)
 					events.land_fl		= 0;
 					events.land_fl_vel	= 0;
 					
-					//events.land_alt		= state_estimate.alt_bmp; //we have already passed apogee for sure, so don't overwrite apogee altitude!
+					events.land_alt		= state_estimate.alt_bmp; //we have already passed apogee for sure, so don't overwrite apogee altitude!
 					return 0;
 				}
 
@@ -309,8 +319,9 @@ int __flight_status_update(void)
 				events.apogee_fl = 0;
 				return 0;
 			}
+			return -1;
 		}
-		else if (flight_status == DESCENT_TO_LAND) //need to update it (has not been verified yet, Jack 4/2/2021)
+		else if (flight_status == DESCENT_TO_LAND) //has not been verified yet, Jack 4/2/2021
 		{
 			//mission is almost over, we try to keep the system safe untill recovery
 			user_input.flight_mode = IDLE; //disable all controllers
@@ -325,8 +336,6 @@ int __flight_status_update(void)
 			{
 				if (sstate.arm_state == ARMED) servos_disarm();
 			}
-
-
 
 			//landing detection is not critical, since the mission is over at this point
 			//we can remain in DESCENT_TO_LAND safely because controllers are in IDLE mode (no control)
@@ -356,6 +365,7 @@ int __flight_status_update(void)
 						events.land_fl_vel = 1; //may have landed - need to verify (make sure this is still enabled)
 						return 0;
 					}
+					return -1;
 				}
 				else if (events.land_fl != 1)
 				{
@@ -380,6 +390,7 @@ int __flight_status_update(void)
 						events.land_fl = 1; //may have landed - need to verify (make sure this is still enabled)
 						return 0;
 					}
+					return -1;
 				}
 				else
 				{
@@ -389,11 +400,13 @@ int __flight_status_update(void)
 					return 0;
 				}
 
-				
+				//should never reach this line
+				return -1;
 
 			}
 			else //if altitude changes are more than the tolerance
 			{
+				/*
 				if (events.land_alt < state_estimate.alt_bmp) //will normally happen when we are still descending
 				{
 					events.land_alt		= state_estimate.alt_bmp;
@@ -411,11 +424,16 @@ int __flight_status_update(void)
 					// - sensor failure (barometer, specifically) - kinda late to the party if this is the case
 					return 0;
 				}
+				*/
+
+				//it should not be possible to reach this line since the altitude was already checked earlier, but just in case:
+				events.land_fl = 0;
+				events.land_fl_vel = 0;
 
 				return 0;
 
 			}
-
+			return -1;
 		}
 		else if (flight_status == LANDED)
 		{
@@ -436,9 +454,9 @@ int __flight_status_update(void)
 			printf("ERROR in __flight_status_update, unknown flight status\n");
 			return -1;
 		}
-	
+		return -1;
 	}
-	return -1; //something went wrong - we should never reach to this point
+	return -1; //something went wrong - we should never reach this line
 }
 
 
