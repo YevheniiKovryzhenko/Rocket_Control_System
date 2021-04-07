@@ -117,8 +117,9 @@ int __flight_status_update(void)
 		events.apogee_fl	= 0; //reset apogee flag
 	}
 	
-	//always update the current altitude for landing if it has decreased below the tol.
-	if (events.land_alt > state_estimate.alt_bmp - settings.event_landing_alt_tol)
+	//always update the current altitude for landing if it has escaped outside the tol.
+	if (events.land_alt > state_estimate.alt_bmp + settings.event_landing_alt_tol 
+		|| events.land_alt < state_estimate.alt_bmp - settings.event_landing_alt_tol)
 	{
 		events.land_alt		= state_estimate.alt_bmp;
 		events.land_fl		= 0; //still descending
@@ -160,7 +161,8 @@ int __flight_status_update(void)
 		}
 		else if (flight_status == STANDBY) //ARMED and waiting for IGNITION
 		{
-			if (events.ignition_fl != 1 && fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
+			if (events.ignition_fl != 1 && fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel 
+				&& fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
 			{
 				//Detected ignition
 				events.init_time	= rc_nanos_since_boot();
@@ -193,7 +195,8 @@ int __flight_status_update(void)
 				}
 				return -1;
 			}
-			else if (events.ignition_fl && fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel && fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
+			else if (events.ignition_fl && fabs(state_estimate.alt_bmp_accel) >= settings.event_launch_accel 
+				&& fabs(state_estimate.alt_bmp - events.ground_alt) >= settings.event_launch_dh)
 			{
 				events.ignition_fl = 1;
 				return 0;
@@ -342,7 +345,9 @@ int __flight_status_update(void)
 
 			// check if landed already, rocket on the ground would have close to zero change in altitude and very small velocity
 			// use tolerances to account for small drift and numeric/sensor noise
-			if (fabs(state_estimate.alt_bmp - events.land_alt) < settings.event_landing_alt_tol) //if on the ground, altitude won't change much
+			if (fabs(state_estimate.alt_bmp_accel) < settings.event_landning_accel_tol 
+				&& fabs(state_estimate.alt_bmp - events.land_alt) < settings.event_landing_alt_tol 
+				&& state_estimate.alt_bmp < events.ground_alt + settings.event_start_landing_alt_m) //if on the ground, altitude won't change much
 			{
 				//quick check, assume velocity is estimated correctly
 				//note, landing under parachute is slow, below 30m/s, but will rarely be slower then 5 m/s (check with recovery)
@@ -387,7 +392,7 @@ int __flight_status_update(void)
 					}
 					else
 					{
-						events.land_fl = 1; //may have landed - need to verify (make sure this is still enabled)
+						//events.land_fl = 1; //may have landed - need to verify (make sure this is still enabled)
 						return 0;
 					}
 					return -1;
