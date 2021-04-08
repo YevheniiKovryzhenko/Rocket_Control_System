@@ -115,7 +115,6 @@ static int __print_header()
 
 static void* __printf_manager_func(__attribute__ ((unused)) void* ptr)
 {
-	arm_state_t prev_arm_state;
 	int i;
 	initialized = 1;
 	printf("\nTurn your transmitter kill switch to arm.\n");
@@ -127,16 +126,10 @@ static void* __printf_manager_func(__attribute__ ((unused)) void* ptr)
 	// print the header
 	__print_header();
 
-	prev_arm_state = fstate.arm_state;
-
 	//sleep so state_estimator can run first
 	rc_usleep(100000);
 
 	while(rc_get_state()!=EXITING){
-		// re-print header on disarming
-		//if(fstate.arm_state==DISARMED && prev_arm_state==ARMED){
-		//	__print_header();
-		//}
 
 		printf("\r");
 		if(settings.printf_arm){
@@ -226,7 +219,6 @@ static void* __printf_manager_func(__attribute__ ((unused)) void* ptr)
 			printf("%d ",state_estimate.counter);
 		}
 		fflush(stdout);
-		prev_arm_state = fstate.arm_state;
 		rc_usleep(1000000/PRINTF_MANAGER_HZ);
 	}
 
@@ -271,10 +263,10 @@ int print_flight_mode(flight_mode_t mode){
 		printf("%sAP_CTRL%s",KCYN,KNRM);
 		return 0;
 	case YP_TEST:
-		printf("%YP_TEST%s",KCYN,KNRM);
+		printf("%sYP_TEST%s",KCYN,KNRM);
 		return 0;
 	case YP_STABILIZE_AP:
-		printf("%YP_STABILIZE_AP%s",KCYN,KNRM);
+		printf("%sYP_STABILIZE_AP%s",KCYN,KNRM);
 		return 0;
 	default:
 		fprintf(stderr,"ERROR in print_flight_mode, unknown flight mode\n");
@@ -290,19 +282,19 @@ int print_flight_status(flight_status_t status) {
 		printf("%s| STANDBY%s", KCYN, KNRM);
 		return 0;
 	case POWERED_ASCENT:
-		printf("%| POWERED_ASCENT%s", KCYN, KNRM);
+		printf("%s| POWERED_ASCENT%s", KCYN, KNRM);
 		return 0;
 	case UNPOWERED_ASCENT:
-		printf("%| UNPOWERED_ASCENT%s", KCYN, KNRM);
+		printf("%s| UNPOWERED_ASCENT%s", KCYN, KNRM);
 		return 0;
 	case DESCENT_TO_LAND:
-		printf("%| DESCENT_TO_LAND%s", KCYN, KNRM);
+		printf("%s| DESCENT_TO_LAND%s", KCYN, KNRM);
 		return 0;
 	case LANDED:
-		printf("%| LANDED%s", KCYN, KNRM);
+		printf("%s| LANDED%s", KCYN, KNRM);
 		return 0;
 	case TEST:
-		printf("%| TEST%s", KCYN, KNRM);
+		printf("%s| TEST%s", KCYN, KNRM);
 		return 0;
 	default:
 		fprintf(stderr, "ERROR in print_flight_mode, unknown flight mode\n");

@@ -478,14 +478,14 @@ int setpoint_manager_update(void)
 		return -1;
 	}
 
-
+	
 	if (__flight_status_update() != 0) {
 		fprintf(stderr, "ERROR in __flight_status_update\n");
 		return -1;
 	}
-
-	//for testing:
-	/*
+	
+	//for testing RPY controllers and actuators:
+    /*
 	if (__finddt_s(setpoint.init_time) > 10 && __finddt_s(setpoint.init_time) < 20)
 	{
 		user_input.requested_arm_mode = ARMED;

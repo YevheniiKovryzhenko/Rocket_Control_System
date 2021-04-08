@@ -39,19 +39,20 @@ int __set_motor_nom_pulse(void)
     return 0;
 }
 
-double __map_servo_signal_ms(double* m, double* servos_lim) {
+double __map_servo_signal_ms(double* m, double servos_lim_min, double servos_lim_max)
+{
     // sanity check
-    if (m[0] > 1.0 || m[0] < 0.0) {
+    if (*m > 1.0 || *m < 0.0) {
         printf("ERROR: desired thrust must be between 0.0 & 1.0\n");
         return -1;
     }
 
     // return quickly for boundary conditions
-    if (m[0] == 0.0) return servos_lim[0];
-    if (m[0] == 1.0) return servos_lim[2];
+    if (*m == 0.0) return servos_lim_min;
+    if (*m == 1.0) return servos_lim_max;
 
     // Map [0 1] signal to servo pulse width
-    return m[0] * (servos_lim[2] - servos_lim[0]) + servos_lim[0];
+    return *m * (servos_lim_max - servos_lim_min) + servos_lim_min;
 
     fprintf(stderr, "ERROR: something in __map_servo_signal_ms went wrong\n");
     return -1;
@@ -141,7 +142,7 @@ int servos_march(int i, double* mot)
     }
 
     // need to do mapping between [0 1] and servo signal in us
-    sstate.m_us[i] = __map_servo_signal_ms(mot, &servos_lim[i][3]);
+    sstate.m_us[i] = __map_servo_signal_ms(mot, servos_lim[i][0], servos_lim[i][2]);
 
     //send servo signals using [-1.5 1.5] normalized values
     //if (rc_servo_send_pulse_normalized(i, mot) == -1) return -1;

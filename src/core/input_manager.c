@@ -56,7 +56,7 @@ int pick_data_source()
 	return -1;
 }
 
-void* input_manager(void* ptr)
+void* input_manager(__attribute__((unused)) void* ptr)
 {
 	user_input.initialized = 1;
 	// wait for first packet

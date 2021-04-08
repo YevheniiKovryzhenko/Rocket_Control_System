@@ -150,9 +150,8 @@ int feedback_init(void)
 int feedback_march(void)
 {
 	int i;
-	double tmp, min, max;
+	double min, max;
 	double u[MAX_INPUTS], mot[MAX_ROTORS];
-	log_entry_t new_log;
 
 	// declare altitude control flag
 	static int last_en_alt_ctrl = 0; //0 if alt.control was not running last time 
@@ -307,7 +306,7 @@ int feedback_march(void)
 		rc_saturate_double(&fstate.m[i], 0.0, 1.0);
 
 		// finally send mapped signal to servos:
-		servos_march(i, &mot[i]);
+        servos_march(i, &fstate.m[i]);
 
 		//printf("\n sstate.m_us[0] = %f, sstate.m_us[1] = %f, sstate.m_us[2] = %f, sstate.m_us[3] = %f, sstate.m_us[4] = %f \n", sstate.m_us[0], sstate.m_us[1], sstate.m_us[2], sstate.m_us[3], sstate.m_us[4]);
 	}

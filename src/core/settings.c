@@ -245,10 +245,10 @@ static int __parse_orientation(void)
  *
  * @return     returns 0 on success or -1 on failure
  */
+/*
 static int __parse_flight_mode(json_object* jobj_str, flight_mode_t* mode)
 {
 	char* tmp_str = NULL;
-	struct json_object *tmp = NULL;
 	if(json_object_is_type(jobj_str, json_type_string)==0){
 		fprintf(stderr,"ERROR: flight_mode should be a string\n");
 		return -1;
@@ -272,7 +272,7 @@ static int __parse_flight_mode(json_object* jobj_str, flight_mode_t* mode)
 	}
 	return 0;
 }
-
+*/
 /**
  * @ brief     parses a json_object and sets up a new controller
  *
@@ -472,9 +472,6 @@ static int __parse_controller(json_object* jobj_ctl, rc_filter_t* filter)
 int settings_load_from_file(char* path)
 {
 	struct json_object *tmp = NULL; // temp object
-	char* tmp_str = NULL; // temp string poitner
-	double tmp_flt;
-	int tmp_int;
 
 	was_load_successful = 0;
 
