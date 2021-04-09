@@ -23,16 +23,22 @@
 #include <servos.h>
 #include <thrust_map.h>
 #include <mix.h>
+
+//#include <serial_send.h>
+#include <serial_receive.h>
+
 #include <input_manager.h>
 #include <setpoint_manager.h>
 #include <state_estimator.h>
 #include <log_manager.h>
 #include <printf_manager.h>
-#include <xbee_packet_t.h>
-#include <fallback_packet.h>
 #include <rc/encoder.h>
 #include <signal.h>
 
+#include <serial_tools.h>
+
+#include <xbee_packet_t.h>
+#include <fallback_packet.h>
 #include <string.h>
 
 #define FAIL(str) \
@@ -110,8 +116,15 @@ static void __imu_isr(void)
 	}
 
 	if (settings.enable_serial)
-	{
-		serial_getData();
+    {
+        if (settings.enable_send_serial)
+        {
+            send_serial_data();
+        }
+        if (settings.enable_receive_serial)
+        {
+            serial_getData();
+		}
 	}
 	feedback_march();
 	
@@ -324,15 +337,13 @@ int main(int argc, char *argv[])
 		fprintf(stderr,"ERROR: failed to start MPU DMP\n");
 		return -1;
 	}
-
 	printf("Initializing serial\n");
 	if (settings.enable_serial)
 	{
 		if (serial_init() < 0) {
 			FAIL("ERROR: failed to initialize serial link")
 		}
-	}
-		
+	}	
 
 
 	// final setup

@@ -19,6 +19,7 @@
 
 user_input_t user_input; // extern variable in input_manager.h
 fallback_packet_t fallback;
+fallback_packet_t serialMsg;
 
 static pthread_t input_manager_thread;
 

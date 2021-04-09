@@ -8,24 +8,12 @@
 //
 // Note:  This MBin protocol is commonly used on embedded serial devices subject to errors
 
-#include <stdio.h>
-#include <unistd.h> // read / write
-#include <stdlib.h>	//one of these two is for memcpy
-#include <string.h>
-#include <stdint.h>
-
-#include <rc/time.h> // for nanos
-
-#include <xbee_serial.h>
-#include <settings.h>
-
-// Below for PRId64
-#include <inttypes.h>
-
-#include "fallback_packet.h"
-fallback_packet_t serialMsg;
+#include <serial_receive.h>
 
 int serial_portID;  // Defined as extern in xbee_packet_t.h
+
+send_serial_packet_t send_serial_packet;
+send_serial_t send_serial;
 
 // Information local to this file
 void readRingBuffer();
@@ -144,6 +132,43 @@ void readRingBuffer()
     rdIndex = RING_INC(rdIndex);
   }  
   return;
+}
+
+int send_serial_data(void)
+{
+    static char serial_packet[SEND_PACKET_LENGTH];
+    static char data_packet[SEND_DATA_LENGTH];
+
+    serial_packet[0] = SEND_START_BYTE0;
+    serial_packet[1] = SEND_START_BYTE1;
+
+    if (finddt_s(send_serial.time_ns) > 1.0 / settings.serial_send_update_hz)
+    {
+        //send_serial_packet.flight_state = flight_status;
+        send_serial_packet.flight_state = DESCENT_TO_LAND;
+
+        memcpy(data_packet, &send_serial_packet, 
+            SEND_DATA_LENGTH);
+
+
+        fletcher16_append(data_packet, SEND_DATA_LENGTH, serial_packet + SEND_DATA_LENGTH + 3);
+
+        memcpy(serial_packet + 3, &data_packet, SEND_DATA_LENGTH);
+
+        if (write(serial_portID, serial_packet, SEND_PACKET_LENGTH) > 0)
+        {
+            send_serial.time_ns = rc_nanos_since_boot();
+            printf("Press ENTER key to Continue\n");
+            getchar(); 
+        }
+        printf("\nWaiting to send data....");
+    }
+    else
+    {
+        printf("\nWaiting to send data....");
+    }
+    
+    return 0;
 }
 
 

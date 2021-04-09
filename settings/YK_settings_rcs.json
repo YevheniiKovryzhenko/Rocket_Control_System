@@ -33,8 +33,11 @@
 	"enable_lidar": false,
 	"enable_encoders": false,
 	"enable_serial": true,
-	"serial_port_1": "/dev/ttyS1",
-	"serial_port_1_baud": 1000000,
+	"enable_send_serial": true,
+	"enable_receive_serial": false,
+	"serial_send_update_hz": 20.0,
+	"serial_port_1": "/dev/ttyUSB0",
+	"serial_port_1_baud": 230400,
 	"serial_port_2": "/dev/ttyACM1",
 	"serial_port_2_baud": 256000,
 
@@ -54,7 +57,7 @@
 	"printf_rev": false,
 	"printf_counter": false,
 
-	"enable_logging": true,
+	"enable_logging": false,
 	"log_sensors": true,
 	"log_state": true,
 	"log_setpoint": true,

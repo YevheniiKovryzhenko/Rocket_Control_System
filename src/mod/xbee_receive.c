@@ -8,20 +8,6 @@
 //
 // Note:  This MBin protocol is commonly used on embedded serial devices subject to errors
 
-#include <stdio.h>
-#include <unistd.h> // read / write
-#include <stdlib.h>	//one of these two is for memcpy
-#include <string.h>
-#include <stdint.h>
-
-#include <rc/time.h> // for nanos
-
-#include <xbee_serial.h>
-#include <settings.h>
-
-// Below for PRId64
-#include <inttypes.h>
-
 #include "xbee_packet_t.h"
 xbee_packet_t xbeeMsg; // Defined as extern in xbee_packet_t.h
 int xbee_portID;  // Defined as extern in xbee_packet_t.h

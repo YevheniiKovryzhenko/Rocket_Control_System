@@ -1,6 +1,21 @@
 #ifndef XBEE_PACKET_H
 #define XBEE_PACKET_H
 
+#include <stdio.h>
+#include <unistd.h> // read / write
+#include <stdlib.h>	//one of these two is for memcpy
+#include <string.h>
+#include <stdint.h>
+
+#include <rc/time.h> // for nanos
+
+#include <serial_tools.h>
+#include <settings.h>
+
+// Below for PRId64
+#include <inttypes.h>
+
+
 // XBee Packet
 typedef struct xbee_packet_t
 {

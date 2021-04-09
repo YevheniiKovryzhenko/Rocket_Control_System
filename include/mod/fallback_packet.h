@@ -37,12 +37,6 @@ typedef struct fallback_packet_t
 #define SERIAL_DATA_LENGTH            sizeof(fallback_packet_t)      // Actual Packet Being Sent
 #define SERIAL_PACKET_LENGTH	    SERIAL_DATA_LENGTH + NUM_FRAMING_BYTES_SERIAL
 
-extern fallback_packet_t serialMsg;
-extern int serial_portID;
-
-int serial_init();
-int serial_getData();
-
 extern fallback_packet_t fallback;
 
 #endif //FALLBACK

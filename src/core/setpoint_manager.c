@@ -20,17 +20,11 @@
 #include <state_estimator.h>
 #include <rcs_defs.h>
 #include <flight_mode.h>
+#include <tools.h>
 
 setpoint_t setpoint; // extern variable in setpoint_manager.h
 flight_status_t flight_status;
 events_t events;
-
-//This is a shortcut function for calculating time elapsed since ti
-double __finddt_s(uint64_t ti) {
-	double dt_s = (rc_nanos_since_boot() - ti) / (1e9);
-	return dt_s;
-}
-
 
 void __update_ap(void)
 {
@@ -172,7 +166,7 @@ int __flight_status_update(void)
 				//don't accept motor ignition just yet
 				return 0;
 			}
-			else if (events.ignition_fl && __finddt_s(events.init_time) >= settings.event_ignition_delay_s)
+			else if (events.ignition_fl && finddt_s(events.init_time) >= settings.event_ignition_delay_s)
 			{
 				//NOTE: check if ignition altitude is needed as a secondary condition
 				// 
@@ -225,7 +219,7 @@ int __flight_status_update(void)
 				events.init_time = rc_nanos_since_boot();
 				return 0;
 			}
-			else if (events.meco_fl && __finddt_s(events.init_time) >= settings.event_cutoff_delay_s )
+			else if (events.meco_fl && finddt_s(events.init_time) >= settings.event_cutoff_delay_s )
 			{
 				if (fabs(state_estimate.alt_bmp - events.ground_alt)  >= settings.event_cutoff_dh && state_estimate.alt_bmp_accel <= 0.0)
 				{
@@ -278,7 +272,7 @@ int __flight_status_update(void)
 			//	events.apogee_alt	= state_estimate.alt_bmp; //set apogee to the current alt
 			//	return 0;
 			//}
-			else if (events.apogee_fl && __finddt_s(events.init_time) >= settings.event_apogee_delay_s) //if no increase in apogee for a few milliseconds
+			else if (events.apogee_fl && finddt_s(events.init_time) >= settings.event_apogee_delay_s) //if no increase in apogee for a few milliseconds
 			{
 				if (state_estimate.alt_bmp_vel <= 0.0 && fabs(state_estimate.alt_bmp_accel) < settings.event_apogee_accel_tol)
 				{
@@ -360,7 +354,7 @@ int __flight_status_update(void)
 				}
 				else if (events.land_fl_vel && fabs(state_estimate.alt_bmp_vel) < settings.event_landing_vel_tol)  //velocity should be very close to zero
 				{
-					if (__finddt_s(events.init_time) >= settings.event_landing_delay_early_s) //confirm if enough time has passed (should be at least 5 seconds)
+					if (finddt_s(events.init_time) >= settings.event_landing_delay_early_s) //confirm if enough time has passed (should be at least 5 seconds)
 					{
 						flight_status = LANDED;
 						return 0;
@@ -385,7 +379,7 @@ int __flight_status_update(void)
 				}
 				else if (events.land_fl)
 				{
-					if (__finddt_s(events.init_time_landed) >= settings.event_landing_delay_late_s) //confirm if enough time has passed (should be at least 20 seconds)
+					if (finddt_s(events.init_time_landed) >= settings.event_landing_delay_late_s) //confirm if enough time has passed (should be at least 20 seconds)
 					{
 						flight_status = LANDED;
 						return 0;
@@ -486,11 +480,11 @@ int setpoint_manager_update(void)
 	
 	//for testing RPY controllers and actuators:
     /*
-	if (__finddt_s(setpoint.init_time) > 10 && __finddt_s(setpoint.init_time) < 20)
+	if (finddt_s(setpoint.init_time) > 10 && finddt_s(setpoint.init_time) < 20)
 	{
 		user_input.requested_arm_mode = ARMED;
 	}
-	if (__finddt_s(setpoint.init_time) > 20 && __finddt_s(setpoint.init_time) < 60)
+	if (finddt_s(setpoint.init_time) > 20 && finddt_s(setpoint.init_time) < 60)
 	{
 		//user_input.requested_arm_mode = ARMED;
 		user_input.flight_mode = YP_TEST;
@@ -498,7 +492,7 @@ int setpoint_manager_update(void)
 		//flight_status = TEST;
 	}
 	
-	if (__finddt_s(setpoint.init_time) > 60)
+	if (finddt_s(setpoint.init_time) > 60)
 	{
 		user_input.requested_arm_mode = DISARMED;
 	}

@@ -32,7 +32,7 @@ DOCSOURCES	:= $(shell find $(DOCDIR)/src/*) $(DOXYFILE)
 # Compilers, linkers and options
 CC			:= gcc
 CXX			:= g++
-CLINKER		:= gcc
+CLINKER		:= gc
 CXXLINKER	:= g++
 WFLAGS		:= -Wall -Wextra -Werror # all warnings are treated as errors
 #WFLAGS		:= -Wall -Wextra

@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 
-#include "xbee_serial.h"
+#include "serial_tools.h"
 
 
 static int
