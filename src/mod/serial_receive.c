@@ -142,30 +142,40 @@ int send_serial_data(void)
     serial_packet[0] = SEND_START_BYTE0;
     serial_packet[1] = SEND_START_BYTE1;
 
-    if (finddt_s(send_serial.time_ns) > 1.0 / settings.serial_send_update_hz)
+    if (1.0/finddt_s(send_serial.time_ns) < settings.serial_send_update_hz)
     {
-        //send_serial_packet.flight_state = flight_status;
-        send_serial_packet.flight_state = DESCENT_TO_LAND;
+        send_serial_packet.flight_state = flight_status;
+        send_serial_packet.time_ms = rc_nanos_since_boot() / 1000;
+        //send_serial_packet.flight_state = DESCENT_TO_LAND;
 
         memcpy(data_packet, &send_serial_packet, 
             SEND_DATA_LENGTH);
 
 
-        fletcher16_append(data_packet, SEND_DATA_LENGTH, serial_packet + SEND_DATA_LENGTH + 3);
+        fletcher16_append(data_packet, SEND_DATA_LENGTH, serial_packet + SEND_DATA_LENGTH + 2);
 
-        memcpy(serial_packet + 3, &data_packet, SEND_DATA_LENGTH);
+        memcpy(serial_packet + 2, &data_packet, SEND_DATA_LENGTH);
 
         if (write(serial_portID, serial_packet, SEND_PACKET_LENGTH) > 0)
         {
+            /*
+            printf("\nSedning  data....  fr=%f (Hz)\n", 1.0 / finddt_s(send_serial.time_ns));
+            unsigned int i = 0;
+            while (i < SEND_PACKET_LENGTH)
+            {
+                printf("\n %d Byte is: %X", i, serial_packet[i]);
+                i++;
+            }
+            
+            //printf("\nPress ENTER key to Continue\n");
+            //getchar(); 
+            */
             send_serial.time_ns = rc_nanos_since_boot();
-            printf("Press ENTER key to Continue\n");
-            getchar(); 
         }
-        printf("\nWaiting to send data....");
     }
     else
     {
-        printf("\nWaiting to send data....");
+        //printf("\nWaiting to send data....");
     }
     
     return 0;

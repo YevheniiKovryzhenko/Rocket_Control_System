@@ -17,6 +17,7 @@ inline uint16_t fletcher16(char* buf, size_t buflen)
     return (uint16_t) ((chksm1 << 8) | chksm0);
 }
 
+
 inline uint16_t fletcher16_append(char* buf, size_t buflen, char* dest)
 {
     //Compute Fletcher16 CRC
@@ -27,7 +28,6 @@ inline uint16_t fletcher16_append(char* buf, size_t buflen, char* dest)
 
     return retVal;
 }
-
 
 
 #endif //CRC16_HPP 

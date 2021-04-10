@@ -28,6 +28,7 @@ int serial_getData();
 
 typedef struct send_serial_packet_t
 {
+    uint32_t time_ms;
     flight_status_t flight_state;  ///< Use this channel to send current flight status
 } send_serial_packet_t;
 

@@ -9,14 +9,14 @@ DOCDIR		:= docs
 DOXYFILE	:= $(DOCDIR)/Doxyfile
 
 # Target variables
-TARGET		:= $(BINDIR)/rc_pilot
+TARGET		:= $(BINDIR)/rcs
 TESTTARGET  := $(BINDIR)/test
 
 # Browser for docs (firefox, google-chrome, etc.)
 BROWSER		:= firefox
 
 # File definitions for rules
-#	Sources - *.c files including main.c for rc_pilot executable
+#	Sources - *.c files including main.c for rcs executable
 #	Objects	- c objects created from the primary source files
 #	Testsources - *.cpp files for test suite
 #	Testobjects - c and cpp objects created from the test sources and primary sources excluding main.o
@@ -32,7 +32,7 @@ DOCSOURCES	:= $(shell find $(DOCDIR)/src/*) $(DOXYFILE)
 # Compilers, linkers and options
 CC			:= gcc
 CXX			:= g++
-CLINKER		:= gc
+CLINKER		:= gcc
 CXXLINKER	:= g++
 WFLAGS		:= -Wall -Wextra -Werror # all warnings are treated as errors
 #WFLAGS		:= -Wall -Wextra

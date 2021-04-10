@@ -34,10 +34,10 @@
 	"enable_encoders": false,
 	"enable_serial": true,
 	"enable_send_serial": true,
-	"enable_receive_serial": false,
+	"enable_receive_serial": true,
 	"serial_send_update_hz": 20.0,
-	"serial_port_1": "/dev/ttyUSB0",
-	"serial_port_1_baud": 230400,
+	"serial_port_1": "/dev/ttyS1",
+	"serial_port_1_baud": 1000000,
 	"serial_port_2": "/dev/ttyACM1",
 	"serial_port_2_baud": 256000,
 
