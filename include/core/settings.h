@@ -107,6 +107,7 @@ typedef struct settings_t{
 	int log_setpoint;
 	int log_control_u;
 	int log_motor_signals;
+    int log_motor_signals_us;
 	int log_encoders;
 	///@}
 

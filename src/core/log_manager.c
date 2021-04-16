@@ -31,6 +31,7 @@
 #include <rc/encoder.h>
 #include <signal.h>
 #include <xbee_packet_t.h>
+#include <servos.h>
 
 #define MAX_LOG_FILES	500
 #define BUF_LEN		50
@@ -83,6 +84,19 @@ static int __write_header(FILE* fd)
 	if(settings.log_motor_signals && settings.num_rotors==4){
 		fprintf(fd, ",mot_1,mot_2,mot_3,mot_4");
 	}
+
+	if (settings.log_motor_signals_us && settings.num_rotors == 8)
+    {
+        fprintf(fd, ",mot_1_us,mot_2_us,mot_3_us,mot_4_us,mot_5_us,mot_6_us,mot_7_us,mot_8_us");
+    }
+    if (settings.log_motor_signals_us && settings.num_rotors == 6)
+    {
+        fprintf(fd, ",mot_1_us,mot_2_us,mot_3_us,mot_4_us,mot_5_us,mot_6_us");
+    }
+    if (settings.log_motor_signals_us && settings.num_rotors == 4)
+    {
+        fprintf(fd, ",mot_1_us,mot_2_us,mot_3_us,mot_4_us");
+    }
 
 	fprintf(fd, "\n");
 	return 0;
@@ -195,6 +209,34 @@ static int __write_log_entry(FILE* fd, log_entry_t e)
 							e.mot_3,\
 							e.mot_4);
 	}
+
+	if(settings.log_motor_signals_us && settings.num_rotors==8){
+		fprintf(fd, ",%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F,%.4F",	e.mot_1_us,\
+							e.mot_2_us,\
+							e.mot_3_us,\
+							e.mot_4_us,\
+							e.mot_5_us,\
+							e.mot_6_us,\
+							e.mot_7_us,\
+							e.mot_8_us);
+	}
+    if (settings.log_motor_signals_us && settings.num_rotors == 6)
+    {
+        fprintf(fd, ",%.4F,%.4F,%.4F,%.4F,%.4F,%.4F", e.mot_1_us,\
+							e.mot_2_us,\
+							e.mot_3_us,\
+							e.mot_4_us,\
+							e.mot_5_us,\
+							e.mot_6_us);
+	}
+    if (settings.log_motor_signals_us && settings.num_rotors == 4)
+    {
+        fprintf(fd, ",%.4F,%.4F,%.4F,%.4F", e.mot_1_us,\
+							e.mot_2_us,\
+							e.mot_3_us,\
+							e.mot_4_us);
+	}
+
 
 	fprintf(fd, "\n");
 	return 0;
@@ -370,6 +412,15 @@ static log_entry_t __construct_new_entry()
 	l.mot_6		= fstate.m[5];
 	l.mot_7		= fstate.m[6];
 	l.mot_8		= fstate.m[7];
+
+	l.mot_1_us	= sstate.m_us[0];
+    l.mot_2_us	= sstate.m_us[1];
+    l.mot_3_us	= sstate.m_us[2];
+    l.mot_4_us	= sstate.m_us[3];
+    l.mot_5_us	= sstate.m_us[4];
+    l.mot_6_us	= sstate.m_us[5];
+    l.mot_7_us	= sstate.m_us[6];
+    l.mot_8_us	= sstate.m_us[7];
 
 	return l;
 }

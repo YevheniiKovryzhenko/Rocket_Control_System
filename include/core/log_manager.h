@@ -97,7 +97,7 @@ typedef struct log_entry_t{
 	double	u_Z;
 	///@}
 
-	/** @name motor signals */
+	/** @name motor commmand signals */
 	///@{
 	double	mot_1;
 	double	mot_2;
@@ -107,6 +107,18 @@ typedef struct log_entry_t{
 	double	mot_6;
 	double	mot_7;
 	double	mot_8;
+	///@}
+    
+	/** @name motor pwm sigmals */
+	///@{
+    double mot_1_us;
+    double mot_2_us;
+    double mot_3_us;
+    double mot_4_us;
+    double mot_5_us;
+    double mot_6_us;
+    double mot_7_us;
+    double mot_8_us;
 	///@}
 
 } log_entry_t;

@@ -32,7 +32,7 @@
 	"use_xbee_roll": false,
 	"enable_lidar": false,
 	"enable_encoders": false,
-	"enable_serial": true,
+	"enable_serial": false,
 	"enable_send_serial": true,
 	"enable_receive_serial": true,
 	"serial_send_update_hz": 20.0,
@@ -57,12 +57,13 @@
 	"printf_rev": false,
 	"printf_counter": false,
 
-	"enable_logging": false,
+	"enable_logging": true,
 	"log_sensors": true,
 	"log_state": true,
 	"log_setpoint": true,
 	"log_control_u": true,
 	"log_motor_signals": true,
+	"log_motor_signals_us": true,
 	"log_encoders": false,
 
 	"dest_ip": "169.254.97.190",

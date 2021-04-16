@@ -32,7 +32,7 @@ static double servos_lim[8][3] = \
 */
 int __set_motor_nom_pulse(void)
 {
-    for (int i = 0; i < RC_SERVO_CH_MAX; i++) {
+    for (int i = 0; i < MAX_ROTORS; i++) {
         sstate.m_us[i] = servos_lim[i][1]; //have to set to calibrated nominal values
     }
 
@@ -64,7 +64,7 @@ int servos_init(void)
     // initialize PRU
     if (rc_servo_init()) return -1;
 
-    for (int i = 0; i < RC_SERVO_CH_MAX; i++) {
+    for (int i = 0; i < MAX_ROTORS; i++) {
         sstate.m[i] = 0; //zero everything out just in case
     }
     __set_motor_nom_pulse();
@@ -111,7 +111,7 @@ int servos_return_to_nominal(void)
     }
 
     //send servo signals using Pulse Width in microseconds
-    for (int i = 0; i < RC_SERVO_CH_MAX; i++) {
+    for (int i = 0; i < MAX_ROTORS; i++) {
         if (rc_servo_send_pulse_us(i, sstate.m_us[i]) == -1) return -1;
     }
     return 0;
@@ -123,7 +123,7 @@ int servos_disarm(void)
     __set_motor_nom_pulse(); //won't work, need extra time before power is killed
 
     //send servo signals using Pulse Width in microseconds
-    for (int i = 0; i < RC_SERVO_CH_MAX; i++) {
+    for (int i = 0; i < MAX_ROTORS; i++) {
         if (rc_servo_send_pulse_us(i, sstate.m_us[i]) == -1) return -1;
     }
 

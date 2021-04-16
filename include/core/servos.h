@@ -19,6 +19,7 @@
 #include <rc/adc.h>
 #include <rc/servo.h>
 #include <rcs_defs.h>
+#include <mix.h>
 
 
 
@@ -33,9 +34,9 @@
 typedef struct servos_state_t {
 	arm_state_t arm_state;			///< ARMED/DISARMED
 	int initialized;				///< set to 1 after servos_init(void)
-	double m[RC_SERVO_CH_MAX];		///< servo motor signals for each pin in [0 1] range
-	double m_us[RC_SERVO_CH_MAX];	///< servo motor signals for each pin in pulse width
-	double servos_lim[RC_SERVO_CH_MAX][3];	///< servo minimum (first col.), nominal (second col.) and maximum values (last col.) 
+	double m[MAX_ROTORS];		///< servo motor signals for each pin in [0 1] range
+	double m_us[MAX_ROTORS];	///< servo motor signals for each pin in pulse width
+	double servos_lim[MAX_ROTORS][3];	///< servo minimum (first col.), nominal (second col.) and maximum values (last col.) 
 }servos_state_t;
 
 extern servos_state_t sstate;

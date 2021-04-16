@@ -589,6 +589,7 @@ int settings_load_from_file(char* path)
 	PARSE_BOOL(log_setpoint)
 	PARSE_BOOL(log_control_u)
 	PARSE_BOOL(log_motor_signals)
+    PARSE_BOOL(log_motor_signals_us)
 	PARSE_BOOL(log_encoders)
 
 	// MAVLINK

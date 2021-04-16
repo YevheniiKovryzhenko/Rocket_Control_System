@@ -43,9 +43,7 @@ typedef enum arm_state_t {
 #define MAX_ROLL_SETPOINT	0.2	// rad
 #define MAX_PITCH_SETPOINT	0.2	// rad
 #define ALT_MAX_ERROR		300.0	//< meters.
-//#define MAX_CLIMB_RATE		1.0	// m/s
 #define YAW_DEADZONE		0.02
-//#define THROTTLE_DEADZONE	0.02
 #define SOFT_START_SECONDS	1.0	// controller soft start seconds
 #define ALT_CUTOFF_FREQ		2.0
 #define BMP_RATE_DIV		10	// optionally sample bmp less frequently than mpu
@@ -59,8 +57,8 @@ typedef enum arm_state_t {
 #define TIP_ANGLE			1.13
 
  // Files
-//#define LOG_DIR		"/home/debian/rcs_logs/"
-#define LOG_DIR		"/mnt/SD/rcs_logs/"
+#define LOG_DIR		"/home/debian/rcs_logs/"
+//#define LOG_DIR		"/mnt/SD/rcs_logs/"
 
 // terminal emulator control sequences
 #define WRAP_DISABLE	"\033[?7l"
