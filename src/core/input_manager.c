@@ -34,7 +34,12 @@ int pick_data_source()
 
 	//always check these for external input: 
 	user_input.use_external_state_estimation = fallback.use_external_state_estimation;
-	
+
+	if (user_input.run_preflight_checks == 0 && fallback.run_preflight_checks)
+    {
+        user_input.run_preflight_checks = fallback.run_preflight_checks;
+	}
+
 	user_input.requested_arm_mode = fallback.armed_state;
 	if (user_input.use_external_flight_state) //choose transmitted values, computed externally
 	{
@@ -51,10 +56,36 @@ int pick_data_source()
 		//don't do anything, no need to overwrite the state
 		return 0;
 	}
-
+	
 
 	//Should never reach this line
 	return -1;
+}
+
+int start_pre_flight_checks(void)
+{
+	// only run if requested
+    if (user_input.run_preflight_checks)
+    {
+        // Check all the low-level logic:
+        if (servos_preflight.pre_flight_check_res == 0 || servos_preflight.initialized == 0) //do only once
+        {
+            if (servos_preflight.pre_flight_check_res == 0) test_servos();
+            if (servos_preflight.pre_flight_check_res == 1)
+            {
+                printf("\n Success! Pre-flight check complete!\n");
+                return 1;
+            }
+            else if (servos_preflight.pre_flight_check_res == -1)
+            {
+                printf("\n ERROR: Pre-flight check failed!\n");
+                return -1;
+            }
+        }
+	}
+	//Need to implement higher level logic checks later
+
+	return 0;
 }
 
 void* input_manager(__attribute__((unused)) void* ptr)
@@ -93,6 +124,7 @@ int input_manager_init()
 	user_input.flight_mode = IDLE;		///< this is the user commanded flight_mode.
 	user_input.input_active = 0;		///< nonzero indicates some user control is coming in
 	user_input.use_external_state_estimation = 0;		///< always start with relying on BBB data
+    user_input.run_preflight_checks = 0;
 	//need to check serial connection and incoming data from other systems
 
 	// start thread

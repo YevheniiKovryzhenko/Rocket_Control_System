@@ -46,7 +46,7 @@ LDFLAGS		:= -lm -lrt -pthread -ljson-c -lrobotcontrol
 TESTLINK 	:= -L/usr/local/lib/ -lboost_unit_test_framework $(LDFLAGS)
 TESTDEF 	:= -DBOOST_TEST_DYN_LINK -DOFFBOARD_TEST
 
-# Linking objects to build rc_pilot
+# Linking objects to build rcs
 $(TARGET): $(OBJECTS)
 	@mkdir -p $(BINDIR)
 	@$(CLINKER) -o $(@) $(OBJECTS) $(LDFLAGS)

@@ -25,7 +25,7 @@
 #include <mix.h>
 
 //#include <serial_send.h>
-#include <serial_receive.h>
+#include <serial_comms.h>
 
 #include <input_manager.h>
 #include <setpoint_manager.h>

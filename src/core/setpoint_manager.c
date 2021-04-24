@@ -477,6 +477,8 @@ int setpoint_manager_update(void)
 		fprintf(stderr, "ERROR in __flight_status_update\n");
 		return -1;
 	}
+
+	if (start_pre_flight_checks() == -1) printf("ERROR: Failed to start pre-flight checks\n");
 	
 	//for testing RPY controllers and actuators:
     /*

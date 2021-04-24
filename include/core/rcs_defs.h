@@ -57,8 +57,8 @@ typedef enum arm_state_t {
 #define TIP_ANGLE			1.13
 
  // Files
-#define LOG_DIR		"/home/debian/rcs_logs/"
-//#define LOG_DIR		"/mnt/SD/rcs_logs/"
+//#define LOG_DIR		"/home/debian/rcs_logs/"
+#define LOG_DIR		"/mnt/SD/rcs_logs/"
 
 // terminal emulator control sequences
 #define WRAP_DISABLE	"\033[?7l"

@@ -20,6 +20,9 @@
 #include <rc/servo.h>
 #include <rcs_defs.h>
 #include <mix.h>
+#include <tools.h>
+#include <settings.h>
+#include <rc/math/other.h>
 
 
 
@@ -39,6 +42,24 @@ typedef struct servos_state_t {
 	double servos_lim[MAX_ROTORS][3];	///< servo minimum (first col.), nominal (second col.) and maximum values (last col.) 
 }servos_state_t;
 
+
+#ifndef test_servos
+    #define num_cases 6
+#endif  // !test_servos
+typedef struct servos_preflight_test_t
+{
+    double time_delay;
+    double time_delay_cases;
+    uint64_t time_ns;
+    uint64_t time_cases;
+    uint64_t init_time;
+    int pre_flight_check_res;
+    int preflight_case;
+    int init_cases;
+    int initialized;
+} servos_preflight_test_t;
+
+extern servos_preflight_test_t servos_preflight;
 extern servos_state_t sstate;
 
  /**
@@ -90,6 +111,14 @@ int servos_arm(void);
  * @return     0 on success, -1 on failure
  */
 int servos_return_to_nominal(void);
+
+/**
+* @brief		This function runs pre-flight check of low level logic
+*					(control signal mapping, channel mixing and pwm)
+*
+*	@return		0 if still running, -1 on failure, 2 if completed
+*/
+int test_servos(void);
 
 
 /**

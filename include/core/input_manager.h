@@ -23,6 +23,7 @@ typedef struct user_input_t{
 	arm_state_t requested_arm_mode;		///< set to ARMED after arming sequence is entered.
 	int use_external_state_estimation;	///< 1 if we want to use externally computed values
 	int use_external_flight_state;		///< 1 if we want to use externally determined flight states.
+    int run_preflight_checks;			///< 1 to start. Can only be used once (will not let you re-run the checklist to avoid issues during flight)
 } user_input_t;
 
 extern user_input_t user_input;
@@ -45,6 +46,15 @@ int input_manager_init(void);
  * @return     0 on success, -1 on failure
  */
 int pick_data_source(void);
+
+/**
+ * @brief      Starts the pre-flight check algorithm.
+ *
+ *
+ *
+ * @return     1 on success, -1 on failure, 0 while active
+ */
+int start_pre_flight_checks(void);
 
 /**
  * @brief      Waits for the input manager thread to exit

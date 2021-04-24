@@ -32,7 +32,7 @@
 	"use_xbee_roll": false,
 	"enable_lidar": false,
 	"enable_encoders": false,
-	"enable_serial": false,
+	"enable_serial": true,
 	"enable_send_serial": true,
 	"enable_receive_serial": true,
 	"serial_send_update_hz": 20.0,

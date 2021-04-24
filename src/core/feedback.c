@@ -307,8 +307,6 @@ int feedback_march(void)
 
 		// finally send mapped signal to servos:
         servos_march(i, &fstate.m[i]);
-
-		//printf("\n sstate.m_us[0] = %f, sstate.m_us[1] = %f, sstate.m_us[2] = %f, sstate.m_us[3] = %f, sstate.m_us[4] = %f \n", sstate.m_us[0], sstate.m_us[1], sstate.m_us[2], sstate.m_us[3], sstate.m_us[4]);
 	}
 
 	/***************************************************************************

@@ -8,7 +8,7 @@
 //
 // Note:  This MBin protocol is commonly used on embedded serial devices subject to errors
 
-#include <serial_receive.h>
+#include <serial_comms.h>
 
 int serial_portID;  // Defined as extern in xbee_packet_t.h
 

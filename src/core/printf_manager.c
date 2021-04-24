@@ -117,8 +117,8 @@ static void* __printf_manager_func(__attribute__ ((unused)) void* ptr)
 {
 	int i;
 	initialized = 1;
-	printf("\nTurn your transmitter kill switch to arm.\n");
-	printf("Then move throttle UP then DOWN to arm controller\n\n");
+	printf("\nRocket Control System is initialized.\n");
+	printf("Waiting for the remote arming sequence...\n\n");
 
 	// turn off linewrap to avoid runaway prints
 	printf(WRAP_DISABLE);

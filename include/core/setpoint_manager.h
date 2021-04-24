@@ -20,6 +20,7 @@
 
 #include <rcs_defs.h>
 #include <stdint.h> // for uint64_t
+#include <servos.h>
 /**
  * Setpoint for the feedback controllers. This is written by setpoint_manager
  * and primarily read in by fly_controller. May also be read by printf_manager

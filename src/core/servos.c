@@ -5,6 +5,7 @@
 #include <servos.h>
 
 servos_state_t sstate;
+servos_preflight_test_t servos_preflight;
 
 /*
 This defines operating range of each servo mottor.
@@ -39,11 +40,61 @@ int __set_motor_nom_pulse(void)
     return 0;
 }
 
+/*
+ * This function should be used anytime
+ * all the servos need to be set to
+ * their min positions
+ */
+int __set_motor_min_pulse(void)
+{
+    for (int i = 0; i < MAX_ROTORS; i++)
+    {
+        sstate.m_us[i] = servos_lim[i][0];  // have to set to calibrated min values
+    }
+
+    return 0;
+}
+
+/*
+ * This function should be used anytime
+ * all the servos need to be set to
+ * their max positions
+ */
+int __set_motor_max_pulse(void)
+{
+    for (int i = 0; i < MAX_ROTORS; i++)
+    {
+        sstate.m_us[i] = servos_lim[i][2];  // have to set to calibrated max values
+    }
+
+    return 0;
+}
+
+/*
+ * This function should be used anytime
+ * all the servos need to be set to
+ * their min positions
+ */
+int __set_single_min_max_pulse(int i, int pos)
+{
+    if (pos == 0) sstate.m_us[i] = servos_lim[i][0];  // have to set to calibrated min values
+    else if (pos) sstate.m_us[i] = servos_lim[i][1];  // have to set to calibrated nom values
+    else if (pos == 2)
+        sstate.m_us[i] = servos_lim[i][2];  // have to set to calibrated max values
+    else
+    {
+        printf("\nERROR: in __set_single_min_max_pulse, pos must be 0-min, 1-nom, or 2-max");
+        return -1;
+    }
+
+    return 0;
+}
+
 double __map_servo_signal_ms(double* m, double servos_lim_min, double servos_lim_max)
 {
     // sanity check
     if (*m > 1.0 || *m < 0.0) {
-        printf("ERROR: desired thrust must be between 0.0 & 1.0\n");
+        printf("\nERROR: in __map_servo_signal_ms, desired thrust must be between 0.0 & 1.0");
         return -1;
     }
 
@@ -67,6 +118,11 @@ int servos_init(void)
     for (int i = 0; i < MAX_ROTORS; i++) {
         sstate.m[i] = 0; //zero everything out just in case
     }
+
+    servos_preflight.initialized = 0;
+    servos_preflight.preflight_case = 0;
+    //printf("\nInitializing servos...\n");
+
     __set_motor_nom_pulse();
 
     sstate.initialized = 1;
@@ -153,7 +209,300 @@ int servos_march(int i, double* mot)
     return 0;
 }
 
+int test_servos(void)
+{
+    if (servos_preflight.initialized && servos_preflight.pre_flight_check_res) return 0; //run only once to prevent errors
+    double u[MAX_INPUTS], mot[MAX_ROTORS];
+    int i;
 
+    if (servos_preflight.preflight_case == 0 && finddt_s(servos_preflight.init_time) < 5.0)
+        return 0;
+
+    for (i = 0; i < MAX_ROTORS; i++) mot[i] = 0.0;
+    for (i = 0; i < MAX_INPUTS; i++) u[i] = 0.0;
+
+    //run only once
+    if (servos_preflight.preflight_case == 0)
+    {
+        printf("Initializing pre-fligth checks:\n");
+        // Start by zeroing out the motors signals and then add from there.
+        servos_preflight.preflight_case = 1;
+        user_input.requested_arm_mode = ARMED;
+        servos_preflight.init_time = rc_nanos_since_boot();
+        servos_preflight.pre_flight_check_res = 0;
+        servos_preflight.init_cases = 1;
+        servos_preflight.initialized = 1;
+    }
+
+    //1. test min/max pulses
+    if (servos_preflight.preflight_case == 1)
+    {
+        if (servos_preflight.init_cases == 1)
+        {
+            servos_preflight.init_cases = 2;
+            servos_preflight.time_delay = 5.0;
+            servos_preflight.time_ns = rc_nanos_since_boot();
+
+            printf("Case-1: min/max pulses check\n");
+            if (__set_motor_max_pulse()) printf("ERROR: Failed to send the maximum pulse.\n");
+        }
+        else if (servos_preflight.init_cases == 2 &&
+                 finddt_s(servos_preflight.time_ns) < servos_preflight.time_delay)
+        {
+            if (__set_motor_max_pulse()) printf("ERROR: Failed to send the maximum pulse.\n");
+        }
+        else if (servos_preflight.init_cases == 2 &&
+                 finddt_s(servos_preflight.time_ns) >= servos_preflight.time_delay)
+        {
+
+            if (__set_motor_min_pulse()) printf("ERROR: Failed to send the minimum pulse.\n");
+            servos_preflight.time_cases = rc_nanos_since_boot();
+            servos_preflight.time_delay_cases = 1.0;
+            servos_preflight.preflight_case = 2;
+            printf("Case-1: Done\n");
+        }
+
+        for (i = 0; i < settings.num_rotors; i++)
+            if (rc_servo_send_pulse_us(i + 1, sstate.m_us[i]) == -1)
+                printf("ERROR: Failed to send pulse to servo rail pin %d\n", i + 1);
+        return 0;
+    }
+    // 2. test min/max signal mapping
+    else if (servos_preflight.preflight_case == 2)
+    {
+        if (servos_preflight.init_cases == 2 && finddt_s(servos_preflight.time_cases) >= servos_preflight.time_delay_cases)
+        {
+            servos_preflight.init_cases = 3;
+            servos_preflight.time_delay = 5.0;
+            servos_preflight.time_ns = rc_nanos_since_boot();
+
+            printf("Case-2: min/max signal mapping\n");
+            for (i = 0; i < settings.num_rotors; i++) mot[i] = 1.0;
+        }
+        else if (servos_preflight.init_cases == 3 &&
+                 finddt_s(servos_preflight.time_ns) < servos_preflight.time_delay)
+        {
+            for (i = 0; i < settings.num_rotors; i++) mot[i] = 1.0;
+        }
+        else if (servos_preflight.init_cases == 3 && finddt_s(servos_preflight.time_ns) >=
+                 servos_preflight.time_delay)
+        {
+            for (i = 0; i < settings.num_rotors; i++) mot[i] = 0.0;
+            servos_preflight.time_cases = rc_nanos_since_boot();
+            servos_preflight.time_delay_cases = 1.0;
+            servos_preflight.preflight_case = 3;
+            printf("Case-2: Done\n");
+        }
+
+        for (i = 0; i < settings.num_rotors; i++)
+        {
+            fstate.m[i] = map_motor_signal(mot[i]);
+
+            rc_saturate_double(&fstate.m[i], 0.0, 1.0);
+            // finally send mapped signal to servos:
+            servos_march(i, &fstate.m[i]);
+        }
+        return 0;
+    }
+    // 3. test min/max pitch channel mixing
+    else if (servos_preflight.preflight_case == 3)
+    {
+        if (servos_preflight.init_cases == 3 && finddt_s(servos_preflight.time_cases) >= servos_preflight.time_delay_cases)
+        {
+            servos_preflight.init_cases = 4;
+            servos_preflight.time_delay = 3.0;
+            servos_preflight.time_ns = rc_nanos_since_boot();
+
+            printf("Case-3: min/max pitch channel mixing\n");
+            u[VEC_PITCH] = 1.0;
+            mix_add_input(u[VEC_PITCH], VEC_PITCH, mot);
+        }
+        else if (servos_preflight.init_cases == 4 &&
+                 finddt_s(servos_preflight.time_ns) < servos_preflight.time_delay)
+        {
+            u[VEC_PITCH] = 1.0;
+            mix_add_input(u[VEC_PITCH], VEC_PITCH, mot);
+        }
+        else if (servos_preflight.init_cases == 4 &&
+                 finddt_s(servos_preflight.time_ns) >=
+                     servos_preflight.time_delay &&
+                 finddt_s(servos_preflight.time_ns) < servos_preflight.time_delay*2.0)
+        {
+            u[VEC_PITCH] = -1.0;
+            mix_add_input(u[VEC_PITCH], VEC_PITCH, mot);
+        }
+        else if (servos_preflight.init_cases == 4 &&
+                 finddt_s(servos_preflight.time_ns) >= servos_preflight.time_delay*2.0)
+        {
+            u[VEC_PITCH] = 0.0;
+            mix_add_input(u[VEC_PITCH], VEC_PITCH, mot);
+            servos_preflight.preflight_case = 4;
+            servos_preflight.time_cases = rc_nanos_since_boot();
+            servos_preflight.time_delay_cases = 0.5;
+            printf("Case-3: Done\n");
+        }
+
+        for (i = 0; i < settings.num_rotors; i++)
+        {
+
+            rc_saturate_double(&mot[i], 0.0, 1.0);
+            fstate.m[i] = map_motor_signal(mot[i]);
+
+            rc_saturate_double(&fstate.m[i], 0.0, 1.0);
+            // finally send mapped signal to servos:
+            servos_march(i, &fstate.m[i]);
+        }
+        return 0;
+    }
+    // 4. test min/max yaw channel mixing
+    else if (servos_preflight.preflight_case == 4)
+    {
+        if (servos_preflight.init_cases == 4 && finddt_s(servos_preflight.time_cases) >= servos_preflight.time_delay_cases)
+        {
+            servos_preflight.init_cases = 5;
+            servos_preflight.time_delay = 3.0;
+            servos_preflight.time_ns = rc_nanos_since_boot();
+
+            printf("Case-4: min/max yaw channel mixing\n");
+            u[VEC_YAW] = 1.0;
+            mix_add_input(u[VEC_YAW], VEC_YAW, mot);
+        }
+        else if (servos_preflight.init_cases == 5 &&
+                 finddt_s(servos_preflight.time_ns) < servos_preflight.time_delay)
+        {
+            u[VEC_YAW] = 1.0;
+            mix_add_input(u[VEC_YAW], VEC_YAW, mot);
+        }
+        else if (servos_preflight.init_cases == 5 &&
+                 finddt_s(servos_preflight.time_ns) >= servos_preflight.time_delay &&
+                 finddt_s(servos_preflight.time_ns) < servos_preflight.time_delay * 2.0)
+        {
+            u[VEC_YAW] = -1.0;
+            mix_add_input(u[VEC_YAW], VEC_YAW, mot);
+        }
+        else if (servos_preflight.init_cases == 5 &&
+                 finddt_s(servos_preflight.time_ns) >= servos_preflight.time_delay * 2.0)
+        {
+            u[VEC_YAW] = 0.0;
+            mix_add_input(u[VEC_YAW], VEC_YAW, mot);
+
+            servos_preflight.preflight_case = 5;
+            servos_preflight.time_cases = rc_nanos_since_boot();
+            servos_preflight.time_delay_cases = 1.0;
+            printf("Case-4: Done\n");
+        }
+
+        for (i = 0; i < settings.num_rotors; i++)
+        {
+
+            rc_saturate_double(&mot[i], 0.0, 1.0);
+            fstate.m[i] = map_motor_signal(mot[i]);
+
+            rc_saturate_double(&fstate.m[i], 0.0, 1.0);
+            // finally send mapped signal to servos:
+            servos_march(i, &fstate.m[i]);
+        }
+        return 0;
+    }
+    // 5. test min/max brake channel mixing
+    else if (servos_preflight.preflight_case == 5)
+    {
+        if (servos_preflight.init_cases == 5 &&
+            finddt_s(servos_preflight.time_cases) >= servos_preflight.time_delay_cases)
+        {
+            servos_preflight.init_cases = 6;
+            servos_preflight.time_delay = 3.0;
+            servos_preflight.time_ns = rc_nanos_since_boot();
+
+            u[VEC_X] = -1.0;
+            printf("Case-4: min/max brake channel mixing\n");
+            mix_add_input(u[VEC_X], VEC_X, mot);
+        }
+        else if (servos_preflight.init_cases == 6 &&
+                 finddt_s(servos_preflight.time_ns) < servos_preflight.time_delay)
+        {
+            u[VEC_X] = -1.0;
+            mix_add_input(u[VEC_X], VEC_X, mot);
+        }
+        else if (servos_preflight.init_cases == 6 &&
+                 finddt_s(servos_preflight.time_ns) >= servos_preflight.time_delay)
+        {
+            u[VEC_X] = 0.0;
+            mix_add_input(u[VEC_X], VEC_X, mot);
+
+            servos_preflight.preflight_case = 6;
+            servos_preflight.time_cases = rc_nanos_since_boot();
+            servos_preflight.time_delay_cases = 0.5;
+            printf("Case-5: Done\n");
+        }
+
+        for (i = 0; i < settings.num_rotors; i++)
+        {
+            rc_saturate_double(&mot[i], 0.0, 1.0);
+            fstate.m[i] = map_motor_signal(mot[i]);
+
+            rc_saturate_double(&fstate.m[i], 0.0, 1.0);
+            // finally send mapped signal to servos:
+            servos_march(i, &fstate.m[i]);
+        }
+        return 0;
+    }
+    // 6. test incremental increase from min to max on brake channel
+    else if (servos_preflight.preflight_case == 6)
+    {
+        if (servos_preflight.init_cases == 6 && finddt_s(servos_preflight.time_cases) >= servos_preflight.time_delay_cases)
+        {
+            servos_preflight.init_cases = 7;
+            servos_preflight.time_delay = 3.0;
+            servos_preflight.time_ns = rc_nanos_since_boot();
+
+            u[VEC_X] = 0.0;
+            printf("Case-6: incremental increase from min to max on brake channel\n");
+            mix_add_input(u[VEC_X], VEC_X, mot);
+        }
+        else if (servos_preflight.init_cases == 7 &&
+                 finddt_s(servos_preflight.time_ns) <= servos_preflight.time_delay)
+        {
+            u[VEC_X] = -finddt_s(servos_preflight.time_ns) / servos_preflight.time_delay;
+            mix_add_input(u[VEC_X], VEC_X, mot);
+
+            servos_preflight.time_cases = rc_nanos_since_boot();
+            servos_preflight.time_delay_cases = 1.0;
+        }
+        else if (servos_preflight.init_cases == 7 &&
+                 finddt_s(servos_preflight.time_ns) > servos_preflight.time_delay &&
+                 finddt_s(servos_preflight.time_ns) <= servos_preflight.time_delay + 1.0)
+        {
+            __set_motor_nom_pulse();
+        }
+        else if (servos_preflight.init_cases == 7 &&
+                 finddt_s(servos_preflight.time_ns) > servos_preflight.time_delay + 1.0)
+        {
+            printf("Servo Test Completed\n");
+            user_input.requested_arm_mode = DISARMED;
+            servos_preflight.preflight_case = 7;
+            servos_preflight.pre_flight_check_res = 1;
+            return 2;
+        }
+
+        for (i = 0; i < settings.num_rotors; i++)
+        {
+            rc_saturate_double(&mot[i], 0.0, 1.0);
+            fstate.m[i] = map_motor_signal(mot[i]);
+
+            rc_saturate_double(&fstate.m[i], 0.0, 1.0);
+            // finally send mapped signal to servos:
+            servos_march(i, &fstate.m[i]);
+        }
+        return 0;
+    }
+    else 
+    {
+        printf("ERROR: Unknown case\n");
+        return -1;
+    }
+    return 0;
+}
 
 
 

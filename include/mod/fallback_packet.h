@@ -21,6 +21,7 @@ typedef struct fallback_packet_t
 {
     uint32_t time;						///< Unique id or time for synchronizing transmition
 	arm_state_t armed_state;			///< Use this channel to send ARMED or DISARMED command
+    int run_preflight_checks;			///< 1 to start. Can only be used once (will not let you re-run the checklist to avoid issues during flight)
 	int use_external_flight_state;		///< Use flight state determined externally (1)
 	flight_status_t flight_state;		///< Use this channel to send current flight status
 	int use_external_state_estimation;	///< Use data computed externally (1)
