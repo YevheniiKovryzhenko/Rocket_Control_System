@@ -39,7 +39,7 @@ void __update_ap(void)
 
 	setpoint.alt is one of the inputs to the altitude controller in feedback.c 
 	that directly effects motion allong body-fixed X-axis which is
-	in the direction of flight of the rocket vehicle. See mix.h, mix.s, feedback.c for more
+	in the direction of flight of the rocket vehicle. See mix.h, mix.c, feedback.c for more
 	details.
 	*/
 
