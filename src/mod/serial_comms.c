@@ -148,9 +148,7 @@ int send_serial_data(void)
         send_serial_packet.time_ms = rc_nanos_since_boot() / 1000;
         //send_serial_packet.flight_state = DESCENT_TO_LAND;
 
-        memcpy(data_packet, &send_serial_packet, 
-            SEND_DATA_LENGTH);
-
+        memcpy(data_packet, &send_serial_packet, SEND_DATA_LENGTH);
 
         fletcher16_append(data_packet, SEND_DATA_LENGTH, serial_packet + SEND_DATA_LENGTH + 2);
 
